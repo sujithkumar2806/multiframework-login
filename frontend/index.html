@@ -1,4 +1,3 @@
-<!-- frontend/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +25,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            width: 400px;
+            width: 450px;
             max-width: 90%;
             animation: fadeIn 0.5s ease-in;
         }
@@ -45,7 +44,7 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px;
+            padding: 30px;
             text-align: center;
         }
 
@@ -59,8 +58,36 @@
             font-size: 14px;
         }
 
+        .backend-selector {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .backend-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .backend-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .backend-btn.fastapi { background: #059669; color: white; }
+        .backend-btn.django { background: #0C4B33; color: white; }
+        .backend-btn.node { background: #339933; color: white; }
+        .backend-btn.dotnet { background: #512BD4; color: white; }
+
         .form-container {
-            padding: 40px;
+            padding: 30px;
         }
 
         .input-group {
@@ -83,25 +110,6 @@
             box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
         }
 
-        .input-group label {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #999;
-            transition: all 0.3s;
-            pointer-events: none;
-            background: white;
-            padding: 0 5px;
-        }
-
-        .input-group input:focus + label,
-        .input-group input:not(:placeholder-shown) + label {
-            top: 0;
-            font-size: 12px;
-            color: #667eea;
-        }
-
         button {
             width: 100%;
             padding: 14px;
@@ -116,10 +124,6 @@
 
         button:hover {
             transform: translateY(-2px);
-        }
-
-        button:active {
-            transform: translateY(0);
         }
 
         .toggle-buttons {
@@ -178,6 +182,12 @@
             <h1>Welcome</h1>
             <p>Multi-Framework Authentication System</p>
         </div>
+        <div class="backend-selector">
+            <button class="backend-btn fastapi" onclick="setBackend('fastapi')">FastAPI</button>
+            <button class="backend-btn django" onclick="setBackend('django')">Django</button>
+            <button class="backend-btn node" onclick="setBackend('node')">Node.js</button>
+            <button class="backend-btn dotnet" onclick="setBackend('dotnet')">.NET</button>
+        </div>
         <div class="form-container">
             <div class="toggle-buttons">
                 <button class="toggle-btn active" onclick="setMode('login')">Login</button>
@@ -215,12 +225,133 @@
             </div>
             <div id="message" class="message"></div>
             <div class="framework-badge" id="framework-badge">
-                Connected to: Loading...
+                Connected to: <span id="backend-name">FastAPI</span>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        let currentBackend = localStorage.getItem('selectedBackend') || 'fastapi';
+        let currentMode = 'login';
+
+        function setBackend(backend) {
+            currentBackend = backend;
+            localStorage.setItem('selectedBackend', backend);
+            document.querySelectorAll('.backend-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('backend-name').innerText = backend.toUpperCase();
+            showMessage(`Switched to ${backend.toUpperCase()} backend`, 'success');
+            testBackendHealth();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            if (mode === 'login') {
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+            } else {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            }
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function getApiUrl(endpoint) {
+            return `/api/${currentBackend}/${endpoint}`;
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(getApiUrl('login'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('Login successful!', 'success');
+                    setTimeout(() => window.location.href = '/dashboard.html', 1500);
+                } else {
+                    showMessage(data.message || data.detail || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+
+            if (!username || !email || !password) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            if (password !== confirm) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(getApiUrl('register'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('Registration successful! Please login.', 'success');
+                    setMode('login');
+                } else {
+                    showMessage(data.message || data.detail || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        async function testBackendHealth() {
+            try {
+                const response = await fetch(getApiUrl('health'));
+                const data = await response.json();
+                console.log(`${currentBackend} health:`, data);
+            } catch (error) {
+                console.error(`${currentBackend} health check failed:`, error);
+            }
+        }
+
+        function showMessage(msg, type) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = msg;
+            msgDiv.className = `message ${type}`;
+            msgDiv.style.display = 'block';
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Initialize
+        document.getElementById('backend-name').innerText = currentBackend.toUpperCase();
+        document.querySelectorAll('.backend-btn').forEach(btn => {
+            if (btn.innerText.toLowerCase() === currentBackend) {
+                btn.classList.add('active');
+            }
+        });
+        testBackendHealth();
+    </script>
 </body>
 </html>
-
