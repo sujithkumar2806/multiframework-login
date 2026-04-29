@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Parse DATABASE_URL
+// Parse DATABASE_URL and add SSL
 const dbUrl = process.env.DATABASE_URL || 'postgresql://dbadmin:SecurePass123!@multiframework-db.c4fuy0s4wc4o.us-east-1.rds.amazonaws.com:5432/postgres';
 const parsedUrl = new URL(dbUrl);
 
@@ -20,6 +20,7 @@ const pool = new Pool({
     user: parsedUrl.username,
     password: parsedUrl.password,
     database: parsedUrl.pathname.slice(1),
+    ssl: { rejectUnauthorized: false }  // Add SSL for AWS RDS
 });
 
 // Health check
