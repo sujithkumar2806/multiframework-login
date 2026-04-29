@@ -20,8 +20,9 @@ pipeline {
                 sh """
                     ssh ubuntu@${PRIVATE_EC2} '
                         cd ${DEPLOY_PATH}
+                        git pull origin main
                         docker-compose down
-                        docker-compose pull
+                        docker-compose build --no-cache
                         docker-compose up -d
                     '
                 """
@@ -35,6 +36,7 @@ pipeline {
                     ssh ubuntu@${PRIVATE_EC2} '
                         sleep 10
                         docker ps --format "table {{.Names}}\t{{.Status}}"
+                        curl -s http://localhost | grep -q "backend-selector" && echo "✅ New frontend deployed" || echo "⚠️ Old frontend still present"
                     '
                 """
             }
