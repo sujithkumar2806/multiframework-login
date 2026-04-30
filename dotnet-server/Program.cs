@@ -1,71 +1,80 @@
-// dotnet-server/Program.cs
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Npgsql;
-using System.Text.Json;
+using System.Text;
+using Microsoft.AspNetCore.Cors;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddCors();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
+builder.Services.AddEndpointsApiExplorer();
+
 var app = builder.Build();
+app.UseCors("AllowAll");
 
-app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ?? 
+    "Host=multiframework-db.c4fuy0s4wc4o.us-east-1.rds.amazonaws.com;Database=postgres;Username=dbadmin;Password=SecurePass123!";
 
-string connectionString = "Host=postgres;Database=userdb;Username=admin;Password=secretpassword";
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", framework = ".NET 🚀" }));
 
-app.MapGet("/api/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
-
-app.MapPost("/api/register", async (HttpContext context) =>
+app.MapPost("/api/register", async ([FromBody] User user) =>
 {
-    var data = await JsonSerializer.DeserializeAsync<RegisterData>(context.Request.Body);
-    
-    using var conn = new NpgsqlConnection(connectionString);
-    await conn.OpenAsync();
-    
-    // Check if user exists
-    var checkCmd = new NpgsqlCommand("SELECT id FROM users WHERE username = @username OR email = @email", conn);
-    checkCmd.Parameters.AddWithValue("@username", data.Username);
-    checkCmd.Parameters.AddWithValue("@email", data.Email);
-    
-    if (await checkCmd.ExecuteScalarAsync() != null)
-        return Results.BadRequest(new { message = "Username or email already exists" });
-    
-    // Hash password and insert
-    string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.Password);
-    var insertCmd = new NpgsqlCommand("INSERT INTO users (username, email, password_hash) VALUES (@username, @email, @password) RETURNING username", conn);
-    insertCmd.Parameters.AddWithValue("@username", data.Username);
-    insertCmd.Parameters.AddWithValue("@email", data.Email);
-    insertCmd.Parameters.AddWithValue("@password", hashedPassword);
-    
-    var result = await insertCmd.ExecuteScalarAsync();
-    return Results.Json(new { message = "User created successfully", username = result });
+    try
+    {
+        using var conn = new NpgsqlConnection(connectionString);
+        await conn.OpenAsync();
+        
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password, 12);
+        
+        using var cmd = new NpgsqlCommand(
+            "INSERT INTO users (username, email, password_hash) VALUES (@username, @email, @hash)", conn);
+        cmd.Parameters.AddWithValue("@username", user.Username);
+        cmd.Parameters.AddWithValue("@email", user.Email);
+        cmd.Parameters.AddWithValue("@hash", hashedPassword);
+        
+        await cmd.ExecuteNonQueryAsync();
+        return Results.Ok(new { message = "User created successfully", username = user.Username });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
 });
 
-app.MapPost("/api/login", async (HttpContext context) =>
+app.MapPost("/api/login", async ([FromBody] LoginRequest login) =>
 {
-    var data = await JsonSerializer.DeserializeAsync<LoginData>(context.Request.Body);
-    
-    using var conn = new NpgsqlConnection(connectionString);
-    await conn.OpenAsync();
-    
-    var cmd = new NpgsqlCommand("SELECT username, password_hash FROM users WHERE username = @username OR email = @username", conn);
-    cmd.Parameters.AddWithValue("@username", data.Username);
-    
-    using var reader = await cmd.ExecuteReaderAsync();
-    if (!await reader.ReadAsync())
-        return Results.Unauthorized();
-    
-    string username = reader.GetString(0);
-    string storedHash = reader.GetString(1);
-    
-    if (!BCrypt.Net.BCrypt.Verify(data.Password, storedHash))
-        return Results.Unauthorized();
-    
-    return Results.Json(new { message = "Login successful", username = username });
+    try
+    {
+        using var conn = new NpgsqlConnection(connectionString);
+        await conn.OpenAsync();
+        
+        using var cmd = new NpgsqlCommand(
+            "SELECT username, email, password_hash FROM users WHERE username = @username OR email = @username", conn);
+        cmd.Parameters.AddWithValue("@username", login.Username);
+        
+        using var reader = await cmd.ExecuteReaderAsync();
+        
+        if (!await reader.ReadAsync())
+            return Results.Unauthorized(new { message = "Invalid credentials" });
+        
+        string storedHash = reader.GetString(2);
+        
+        if (!BCrypt.Net.BCrypt.Verify(login.Password, storedHash))
+            return Results.Unauthorized(new { message = "Invalid credentials" });
+        
+        return Results.Ok(new { message = "Login successful", username = reader.GetString(0) });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
 });
 
-app.Run("http://0.0.0.0:8080");
+app.Run();
 
-record RegisterData(string Username, string Email, string Password);
-record LoginData(string Username, string Password);
+record User(string Username, string Email, string Password);
+record LoginRequest(string Username, string Password);
