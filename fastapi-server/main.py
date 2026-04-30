@@ -1,4 +1,3 @@
-# fastapi-server/main.py
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -6,18 +5,15 @@ from sqlalchemy import create_engine, Column, String, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
-from passlib.context import CryptContext
+import bcrypt
 import os
 
-# Database setup - Now using environment variable
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://admin:secretpassword@postgres:5432/userdb")
+# Database setup
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dbadmin:SecurePass123!@multiframework-db.c4fuy0s4wc4o.us-east-1.rds.amazonaws.com:5432/postgres")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Models
 class User(Base):
@@ -43,12 +39,6 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
-class UserResponse(BaseModel):
-    id: int
-    username: str
-    email: str
-    created_at: datetime
-
 # FastAPI app
 app = FastAPI(title="FastAPI Authentication Service", version="1.0.0")
 
@@ -60,7 +50,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -91,8 +80,8 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create new user
-    hashed_password = pwd_context.hash(user.password)
+    # Create new user with bcrypt hash
+    hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt(12)).decode('utf-8')
     db_user = User(
         username=user.username,
         email=user.email,
@@ -115,8 +104,8 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Verify password
-    if not pwd_context.verify(user.password, db_user.password_hash):
+    # Verify password with bcrypt
+    if not bcrypt.checkpw(user.password.encode('utf-8'), db_user.password_hash.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     return {"message": "Login successful", "username": db_user.username}
