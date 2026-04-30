@@ -1,5 +1,4 @@
-# django-server/api/views.py
-from django.contrib.auth.hashers import make_password, check_password
+import bcrypt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -21,10 +20,13 @@ def register(request):
     if User.objects.filter(email=email).exists():
         return Response({"message": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
     
+    # Use bcrypt directly (same as Node.js and FastAPI)
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(12)).decode('utf-8')
+    
     user = User.objects.create(
         username=username,
         email=email,
-        password_hash=make_password(password)
+        password_hash=hashed_password
     )
     
     return Response({"message": "User created successfully", "username": username})
@@ -42,7 +44,8 @@ def login(request):
         except User.DoesNotExist:
             return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
     
-    if check_password(password, user.password_hash):
+    # Use bcrypt to verify
+    if bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
         return Response({"message": "Login successful", "username": user.username})
     
     return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
