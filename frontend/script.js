@@ -1,68 +1,67 @@
 // frontend/script.js
+let currentBackend = localStorage.getItem('selectedBackend') || 'fastapi';
 let currentMode = 'login';
 
-async function setMode(mode) {
-    currentMode = mode;
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const buttons = document.querySelectorAll('.toggle-btn');
-    
-    if (mode === 'login') {
-        loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
-        buttons[0].classList.add('active');
-        buttons[1].classList.remove('active');
-    } else {
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
-        buttons[0].classList.remove('active');
-        buttons[1].classList.add('active');
-    }
+function setBackend(backend) {
+    currentBackend = backend;
+    localStorage.setItem('selectedBackend', backend);
+    document.querySelectorAll('.backend-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('backend-name').innerText = backend.toUpperCase();
+    showMessage(`Switched to ${backend.toUpperCase()} backend`, 'success');
+    testBackendHealth();
 }
 
-async function showMessage(message, type) {
-    const msgDiv = document.getElementById('message');
-    msgDiv.textContent = message;
-    msgDiv.className = `message ${type}`;
-    msgDiv.style.display = 'block';
-    setTimeout(() => {
-        msgDiv.style.display = 'none';
-    }, 3000);
+function setMode(mode) {
+    currentMode = mode;
+    if (mode === 'login') {
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('register-form').style.display = 'none';
+    } else {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('register-form').style.display = 'block';
+    }
+    document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function getApiUrl(endpoint) {
+    return `/api/${currentBackend}/${endpoint}`;
 }
 
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
-    
+
     if (!username || !password) {
-        showMessage('Please fill in all fields', 'error');
+        showMessage('Please fill all fields', 'error');
         return;
     }
-    
+
     try {
-        const response = await fetch('/api/login', {
+        const response = await fetch(getApiUrl('login'), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-        
+
         const data = await response.json();
         
-        // Get which backend served the request from response headers
-        const backend = response.headers.get('X-Upstream') || 'Unknown';
-        
         if (response.ok) {
-            showMessage(`Welcome back, ${data.username}! (Served by: ${backend})`, 'success');
+            showMessage('Login successful! Redirecting...', 'success');
+            // Store username for welcome page
+            localStorage.setItem('loggedInUser', username);
+            localStorage.setItem('userBackend', currentBackend);
+            // Redirect to dashboard after 1 second
             setTimeout(() => {
-                showWelcomePage(data.username, backend);
+                window.location.href = '/dashboard.html';
             }, 1000);
         } else {
-            showMessage(data.message || 'Login failed', 'error');
+            showMessage(data.message || data.detail || 'Login failed', 'error');
         }
     } catch (error) {
-        showMessage('Network error. Please try again.', 'error');
+        console.error('Login error:', error);
+        showMessage('Network error. Please check your connection.', 'error');
     }
 }
 
@@ -71,114 +70,74 @@ async function register() {
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
     const confirm = document.getElementById('reg-confirm').value;
-    
-    if (!username || !email || !password || !confirm) {
-        showMessage('Please fill in all fields', 'error');
+
+    if (!username || !email || !password) {
+        showMessage('Please fill all fields', 'error');
         return;
     }
-    
+
     if (password !== confirm) {
         showMessage('Passwords do not match', 'error');
         return;
     }
-    
-    if (password.length < 6) {
-        showMessage('Password must be at least 6 characters', 'error');
+
+    if (password.length < 4) {
+        showMessage('Password must be at least 4 characters', 'error');
         return;
     }
-    
+
     try {
-        const response = await fetch('/api/register', {
+        const response = await fetch(getApiUrl('register'), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password })
         });
-        
+
         const data = await response.json();
         
-        // Get which backend served the request from response headers
-        const backend = response.headers.get('X-Upstream') || 'Unknown';
-        
         if (response.ok) {
-            showMessage(`User ${data.username} created successfully! (Served by: ${backend})`, 'success');
-            setTimeout(() => {
-                setMode('login');
-                document.getElementById('login-username').value = username;
-            }, 1500);
+            showMessage('Registration successful! Please login.', 'success');
+            // Clear form and switch to login
+            document.getElementById('reg-username').value = '';
+            document.getElementById('reg-email').value = '';
+            document.getElementById('reg-password').value = '';
+            document.getElementById('reg-confirm').value = '';
+            setMode('login');
+            document.getElementById('login-username').value = username;
         } else {
-            showMessage(data.message || 'Registration failed', 'error');
+            showMessage(data.message || data.detail || 'Registration failed', 'error');
         }
     } catch (error) {
+        console.error('Register error:', error);
         showMessage('Network error. Please try again.', 'error');
     }
 }
 
-function showWelcomePage(username, backend) {
-    // Create a beautiful welcome page overlay
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        animation: fadeIn 0.5s ease-in;
-    `;
-    
-    const welcomeCard = document.createElement('div');
-    welcomeCard.style.cssText = `
-        background: white;
-        border-radius: 20px;
-        padding: 50px;
-        text-align: center;
-        max-width: 90%;
-        animation: slideUp 0.5s ease-out;
-    `;
-    
-    welcomeCard.innerHTML = `
-        <style>
-            @keyframes slideUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(50px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-        </style>
-        <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
-        <h1 style="color: #667eea; margin-bottom: 10px;">Welcome, ${username}!</h1>
-        <p style="color: #666; margin-bottom: 30px;">You have successfully logged in to the Multi-Framework System</p>
-        <p style="color: #764ba2; margin-bottom: 30px; font-size: 14px;">🤖 Authentication served by: <strong>${backend}</strong></p>
-        <button onclick="location.reload()" style="width: auto; padding: 12px 30px;">Logout</button>
-    `;
-    
-    overlay.appendChild(welcomeCard);
-    document.body.appendChild(overlay);
-}
-
-async function checkFramework() {
+async function testBackendHealth() {
     try {
-        const response = await fetch('/api/health');
+        const response = await fetch(getApiUrl('health'));
         const data = await response.json();
-        const backend = response.headers.get('X-Upstream') || 'Unknown';
-        document.getElementById('framework-badge').innerHTML = 
-            `Connected to: ${data.framework} (via ${backend}) 🚀`;
+        console.log(`${currentBackend} health:`, data);
     } catch (error) {
-        document.getElementById('framework-badge').innerHTML = 
-            `Connected to: Unknown`;
+        console.error(`${currentBackend} health check failed:`, error);
     }
 }
 
-// Check framework on load and every 5 seconds to show load balancing in action
-checkFramework();
-setInterval(checkFramework, 5000);
+function showMessage(msg, type) {
+    const msgDiv = document.getElementById('message');
+    msgDiv.textContent = msg;
+    msgDiv.className = `message ${type}`;
+    msgDiv.style.display = 'block';
+    setTimeout(() => {
+        msgDiv.style.display = 'none';
+    }, 3000);
+}
+
+// Initialize
+document.getElementById('backend-name').innerText = currentBackend.toUpperCase();
+document.querySelectorAll('.backend-btn').forEach(btn => {
+    if (btn.innerText.toLowerCase() === currentBackend) {
+        btn.classList.add('active');
+    }
+});
+testBackendHealth();

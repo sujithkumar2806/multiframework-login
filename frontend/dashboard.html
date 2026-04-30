@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Multi Framework Login System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dashboard-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            width: 500px;
+            max-width: 90%;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .username {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .backend-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .backend-info p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .backend-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .backend-badge.fastapi { background: #059669; color: white; }
+        .backend-badge.django { background: #0C4B33; color: white; }
+        .backend-badge.node { background: #339933; color: white; }
+        .backend-badge.dotnet { background: #512BD4; color: white; }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .features {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .feature {
+            text-align: center;
+            flex: 1;
+        }
+
+        .feature-icon {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+
+        .feature-text {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>Dashboard</h1>
+            <p>Multi-Framework Authentication System</p>
+        </div>
+        <div class="content">
+            <div class="welcome-icon">🎉</div>
+            <div class="username" id="username"></div>
+            <div class="backend-info">
+                <p>✅ You are authenticated through</p>
+                <div class="backend-badge" id="backend-badge">Loading...</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-text">Secure Auth</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">Fast Response</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔄</div>
+                    <div class="feature-text">Load Balanced</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getBackendClass(backend) {
+            const classes = {
+                'fastapi': 'fastapi',
+                'django': 'django', 
+                'node': 'node',
+                'dotnet': 'dotnet'
+            };
+            return classes[backend] || 'fastapi';
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            localStorage.removeItem('userBackend');
+            window.location.href = '/';
+        }
+
+        // Load user info
+        const username = localStorage.getItem('loggedInUser');
+        const backend = localStorage.getItem('userBackend') || 'fastapi';
+
+        if (!username) {
+            window.location.href = '/';
+        }
+
+        document.getElementById('username').innerText = username;
+        const badge = document.getElementById('backend-badge');
+        badge.innerText = backend.toUpperCase();
+        badge.className = `backend-badge ${getBackendClass(backend)}`;
+    </script>
+</body>
+</html>
