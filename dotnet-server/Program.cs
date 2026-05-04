@@ -18,6 +18,10 @@ string password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "SecurePa
 
 string connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
 
+// Health check endpoint (no API prefix for direct access)
+app.MapGet("/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
+
+// API Health check (with prefix)
 app.MapGet("/api/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
 
 app.MapPost("/api/register", async (HttpContext context) =>
