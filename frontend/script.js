@@ -4,10 +4,26 @@ let currentBackend = localStorage.getItem('selectedBackend') || 'fastapi';
 function setBackend(backend) {
     currentBackend = backend;
     localStorage.setItem('selectedBackend', backend);
+    
+    // Update button styles
     document.querySelectorAll('.backend-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
-    document.getElementById('backend-name').innerText = backend.toUpperCase();
-    showMessage(`Switched to ${backend.toUpperCase()} backend`, 'success');
+    
+    // Update displayed backend name
+    const backendNames = {
+        'fastapi': 'FastAPI 🚀',
+        'django': 'Django 🐍',
+        'node': 'Node.js 💚',
+        'dotnet': '.NET 🔷'
+    };
+    document.getElementById('backend-name').innerHTML = backendNames[backend];
+    
+    // Update badge color
+    const badge = document.getElementById('backend-badge');
+    badge.className = `badge-active badge-${backend}`;
+    badge.innerHTML = '✓ Active';
+    
+    showMessage(`Switched to ${backendNames[backend]} backend`, 'success');
 }
 
 function setMode(mode) {
@@ -29,24 +45,28 @@ function getApiUrl(endpoint) {
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
+    
     if (!username || !password) {
         showMessage('Please fill all fields', 'error');
         return;
     }
+    
     try {
         const response = await fetch(getApiUrl('login'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
+        
         const data = await response.json();
+        
         if (response.ok) {
             localStorage.setItem('loggedInUser', username);
             localStorage.setItem('userBackend', currentBackend);
-            showMessage('Login successful! Redirecting...', 'success');
+            showMessage(`✅ Welcome ${username}! Redirecting...`, 'success');
             setTimeout(() => {
                 window.location.href = '/dashboard.html';
-            }, 1000);
+            }, 1500);
         } else {
             showMessage(data.message || data.detail || 'Login failed', 'error');
         }
@@ -61,25 +81,34 @@ async function register() {
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
     const confirm = document.getElementById('reg-confirm').value;
+    
     if (!username || !email || !password) {
         showMessage('Please fill all fields', 'error');
         return;
     }
+    
     if (password !== confirm) {
         showMessage('Passwords do not match', 'error');
         return;
     }
+    
     try {
         const response = await fetch(getApiUrl('register'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password })
         });
+        
         const data = await response.json();
+        
         if (response.ok) {
-            showMessage('Registration successful! Please login.', 'success');
+            showMessage('✅ Registration successful! Please login.', 'success');
             setMode('login');
             document.getElementById('login-username').value = username;
+            document.getElementById('reg-username').value = '';
+            document.getElementById('reg-email').value = '';
+            document.getElementById('reg-password').value = '';
+            document.getElementById('reg-confirm').value = '';
         } else {
             showMessage(data.message || data.detail || 'Registration failed', 'error');
         }
@@ -94,7 +123,25 @@ function showMessage(msg, type) {
     msgDiv.textContent = msg;
     msgDiv.className = `message ${type}`;
     msgDiv.style.display = 'block';
-    setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
+    setTimeout(() => {
+        msgDiv.style.display = 'none';
+    }, 3000);
 }
 
-document.getElementById('backend-name').innerText = currentBackend.toUpperCase();
+// Initialize
+const backendNames = {
+    'fastapi': 'FastAPI 🚀',
+    'django': 'Django 🐍',
+    'node': 'Node.js 💚',
+    'dotnet': '.NET 🔷'
+};
+document.getElementById('backend-name').innerHTML = backendNames[currentBackend];
+const badge = document.getElementById('backend-badge');
+badge.className = `badge-active badge-${currentBackend}`;
+badge.innerHTML = '✓ Active';
+
+document.querySelectorAll('.backend-btn').forEach(btn => {
+    if (btn.innerText.toLowerCase().includes(currentBackend)) {
+        btn.classList.add('active');
+    }
+});

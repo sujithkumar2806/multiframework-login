@@ -19,7 +19,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            width: 450px;
+            width: 480px;
             max-width: 90%;
             animation: fadeIn 0.5s ease-in;
         }
@@ -50,15 +50,21 @@
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+            opacity: 0.7;
         }
         .backend-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            opacity: 1;
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         .backend-btn.fastapi { background: #059669; color: white; }
         .backend-btn.django { background: #0C4B33; color: white; }
         .backend-btn.node { background: #339933; color: white; }
         .backend-btn.dotnet { background: #512BD4; color: white; }
+        .backend-btn:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
         .form-container { padding: 30px; }
         .input-group {
             margin-bottom: 20px;
@@ -96,7 +102,10 @@
             padding: 10px;
             background: #f5f5f5;
             color: #333;
-            margin-bottom: 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
         .toggle-btn.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -109,50 +118,63 @@
             text-align: center;
             display: none;
         }
-        .message.success { background: #d4edda; color: #155724; }
-        .message.error { background: #f8d7da; color: #721c24; }
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .framework-badge {
             text-align: center;
             margin-top: 20px;
-            padding: 10px;
+            padding: 12px;
             background: #f8f9fa;
             border-radius: 10px;
-            font-size: 12px;
-            color: #666;
+            font-size: 14px;
+            font-weight: bold;
         }
+        .badge-active {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+        .badge-fastapi { background: #059669; color: white; }
+        .badge-django { background: #0C4B33; color: white; }
+        .badge-node { background: #339933; color: white; }
+        .badge-dotnet { background: #512BD4; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Welcome</h1>
-            <p>Multi-Framework Authentication System</p>
+            <h1>✨ Multi-Framework Auth ✨</h1>
+            <p>Choose your backend | One database</p>
         </div>
         <div class="backend-selector">
-            <button class="backend-btn fastapi" onclick="setBackend('fastapi')">FastAPI</button>
-            <button class="backend-btn django" onclick="setBackend('django')">Django</button>
-            <button class="backend-btn node" onclick="setBackend('node')">Node.js</button>
-            <button class="backend-btn dotnet" onclick="setBackend('dotnet')">.NET</button>
+            <button class="backend-btn fastapi" onclick="setBackend('fastapi')">🚀 FastAPI</button>
+            <button class="backend-btn django" onclick="setBackend('django')">🐍 Django</button>
+            <button class="backend-btn node" onclick="setBackend('node')">💚 Node.js</button>
+            <button class="backend-btn dotnet" onclick="setBackend('dotnet')">🔷 .NET</button>
         </div>
         <div class="form-container">
             <div class="toggle-buttons">
-                <button class="toggle-btn active" onclick="setMode('login')">Login</button>
-                <button class="toggle-btn" onclick="setMode('register')">Register</button>
+                <button class="toggle-btn active" onclick="setMode('login')">🔐 Login</button>
+                <button class="toggle-btn" onclick="setMode('register')">📝 Register</button>
             </div>
             <div id="login-form">
-                <div class="input-group"><input type="text" id="login-username" placeholder=" "><label>Username or Email</label></div>
-                <div class="input-group"><input type="password" id="login-password" placeholder=" "><label>Password</label></div>
+                <div class="input-group"><input type="text" id="login-username" placeholder=" "><label>👤 Username or Email</label></div>
+                <div class="input-group"><input type="password" id="login-password" placeholder=" "><label>🔒 Password</label></div>
                 <button onclick="login()">Login</button>
             </div>
             <div id="register-form" style="display: none;">
-                <div class="input-group"><input type="text" id="reg-username" placeholder=" "><label>Username</label></div>
-                <div class="input-group"><input type="email" id="reg-email" placeholder=" "><label>Email</label></div>
-                <div class="input-group"><input type="password" id="reg-password" placeholder=" "><label>Password</label></div>
-                <div class="input-group"><input type="password" id="reg-confirm" placeholder=" "><label>Confirm Password</label></div>
+                <div class="input-group"><input type="text" id="reg-username" placeholder=" "><label>👤 Username</label></div>
+                <div class="input-group"><input type="email" id="reg-email" placeholder=" "><label>📧 Email</label></div>
+                <div class="input-group"><input type="password" id="reg-password" placeholder=" "><label>🔒 Password</label></div>
+                <div class="input-group"><input type="password" id="reg-confirm" placeholder=" "><label>✓ Confirm Password</label></div>
                 <button onclick="register()">Create Account</button>
             </div>
             <div id="message" class="message"></div>
-            <div class="framework-badge">Connected to: <span id="backend-name">FastAPI</span></div>
+            <div class="framework-badge">
+                🔌 Connected to: <strong id="backend-name">FastAPI</strong>
+                <span class="badge-active" id="backend-badge"></span>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
