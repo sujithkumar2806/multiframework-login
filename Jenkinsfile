@@ -17,58 +17,71 @@ pipeline {
             }
         }
         
-        stage('Build, Push and Deploy on EC2') {
+        stage('Build and Push to ECR') {
             steps {
-                echo 'Building images, pushing to ECR, and deploying on EC2...'
+                echo 'Building and pushing images to ECR...'
+                sh """
+                    # Login to ECR
+                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                    
+                    # Build and push FastAPI
+                    cd fastapi-server
+                    docker build --no-cache -t multiframework-fastapi:${IMAGE_TAG} .
+                    docker tag multiframework-fastapi:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-fastapi:${IMAGE_TAG}
+                    docker tag multiframework-fastapi:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-fastapi:latest
+                    docker push ${ECR_REGISTRY}/multiframework-fastapi:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/multiframework-fastapi:latest
+                    cd ..
+                    
+                    # Build and push Django
+                    cd django-server
+                    docker build --no-cache -t multiframework-django:${IMAGE_TAG} .
+                    docker tag multiframework-django:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-django:${IMAGE_TAG}
+                    docker tag multiframework-django:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-django:latest
+                    docker push ${ECR_REGISTRY}/multiframework-django:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/multiframework-django:latest
+                    cd ..
+                    
+                    # Build and push Node.js
+                    cd node-server
+                    docker build --no-cache -t multiframework-node:${IMAGE_TAG} .
+                    docker tag multiframework-node:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-node:${IMAGE_TAG}
+                    docker tag multiframework-node:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-node:latest
+                    docker push ${ECR_REGISTRY}/multiframework-node:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/multiframework-node:latest
+                    cd ..
+                    
+                    # Build and push .NET
+                    cd dotnet-server
+                    docker build --no-cache -t multiframework-dotnet:${IMAGE_TAG} .
+                    docker tag multiframework-dotnet:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-dotnet:${IMAGE_TAG}
+                    docker tag multiframework-dotnet:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-dotnet:latest
+                    docker push ${ECR_REGISTRY}/multiframework-dotnet:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/multiframework-dotnet:latest
+                    cd ..
+                """
+            }
+        }
+        
+        stage('Deploy to EC2') {
+            steps {
+                echo 'Deploying to EC2...'
                 sh """
                     ssh -o StrictHostKeyChecking=no ubuntu@${PRIVATE_EC2} '
+                        # Force reset to latest code
                         cd ${DEPLOY_PATH}
-                        git pull origin main
+                        git fetch origin
+                        git reset --hard origin/main
+                        git clean -fd
                         
                         # Login to ECR
                         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                         
-                        # Build FastAPI
-                        cd fastapi-server
-                        docker build -t multiframework-fastapi:${IMAGE_TAG} .
-                        docker tag multiframework-fastapi:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-fastapi:${IMAGE_TAG}
-                        docker tag multiframework-fastapi:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-fastapi:latest
-                        docker push ${ECR_REGISTRY}/multiframework-fastapi:${IMAGE_TAG}
-                        docker push ${ECR_REGISTRY}/multiframework-fastapi:latest
-                        cd ..
-                        
-                        # Build Django
-                        cd django-server
-                        docker build -t multiframework-django:${IMAGE_TAG} .
-                        docker tag multiframework-django:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-django:${IMAGE_TAG}
-                        docker tag multiframework-django:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-django:latest
-                        docker push ${ECR_REGISTRY}/multiframework-django:${IMAGE_TAG}
-                        docker push ${ECR_REGISTRY}/multiframework-django:latest
-                        cd ..
-                        
-                        # Build Node.js
-                        cd node-server
-                        docker build -t multiframework-node:${IMAGE_TAG} .
-                        docker tag multiframework-node:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-node:${IMAGE_TAG}
-                        docker tag multiframework-node:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-node:latest
-                        docker push ${ECR_REGISTRY}/multiframework-node:${IMAGE_TAG}
-                        docker push ${ECR_REGISTRY}/multiframework-node:latest
-                        cd ..
-                        
-                        # Build .NET
-                        cd dotnet-server
-                        docker build -t multiframework-dotnet:${IMAGE_TAG} .
-                        docker tag multiframework-dotnet:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-dotnet:${IMAGE_TAG}
-                        docker tag multiframework-dotnet:${IMAGE_TAG} ${ECR_REGISTRY}/multiframework-dotnet:latest
-                        docker push ${ECR_REGISTRY}/multiframework-dotnet:${IMAGE_TAG}
-                        docker push ${ECR_REGISTRY}/multiframework-dotnet:latest
-                        cd ..
-                        
-                        # Deploy with docker-compose
+                        # Pull and restart
                         docker-compose down
+                        docker system prune -af
                         docker-compose pull
                         docker-compose up -d
-                        docker restart nginx-api 2>/dev/null || true
                     '
                 """
             }
@@ -78,7 +91,7 @@ pipeline {
             steps {
                 sh """
                     ssh ubuntu@${PRIVATE_EC2} '
-                        sleep 10
+                        sleep 15
                         echo "FastAPI:"
                         curl -s http://localhost/api/fastapi/health
                         echo ""
