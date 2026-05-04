@@ -18,21 +18,29 @@ string password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "SecurePa
 
 string connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
 
-// Health check endpoint (no API prefix for direct access)
+// Health check endpoints
 app.MapGet("/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
-
-// API Health check (with prefix)
 app.MapGet("/api/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
 
 app.MapPost("/api/register", async (HttpContext context) =>
 {
     try
     {
-        var data = await JsonSerializer.DeserializeAsync<RegisterData>(context.Request.Body);
+        // Read as dictionary to handle both camelCase and PascalCase
+        var dict = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(context.Request.Body);
         
-        if (data == null || string.IsNullOrEmpty(data.Username))
+        if (dict == null || !dict.ContainsKey("username"))
         {
-            return Results.BadRequest(new { error = "Invalid request data" });
+            return Results.BadRequest(new { error = "Username required" });
+        }
+        
+        string reqUsername = dict["username"];
+        string reqEmail = dict.ContainsKey("email") ? dict["email"] : reqUsername + "@example.com";
+        string reqPassword = dict.ContainsKey("password") ? dict["password"] : "";
+        
+        if (string.IsNullOrEmpty(reqPassword))
+        {
+            return Results.BadRequest(new { error = "Password required" });
         }
         
         using var conn = new NpgsqlConnection(connectionString);
@@ -40,18 +48,18 @@ app.MapPost("/api/register", async (HttpContext context) =>
         
         // Check if user exists
         using var checkCmd = new NpgsqlCommand("SELECT id FROM users WHERE username = @username OR email = @email", conn);
-        checkCmd.Parameters.AddWithValue("@username", data.Username);
-        checkCmd.Parameters.AddWithValue("@email", data.Email);
+        checkCmd.Parameters.AddWithValue("@username", reqUsername);
+        checkCmd.Parameters.AddWithValue("@email", reqEmail);
         
         if (await checkCmd.ExecuteScalarAsync() != null)
-            return Results.BadRequest(new { message = "Username or email already exists" });
+            return Results.BadRequest(new { message = "Username already exists" });
         
         // Hash password with bcrypt
-        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.Password, 12);
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(reqPassword, 12);
         
         using var insertCmd = new NpgsqlCommand("INSERT INTO users (username, email, password_hash) VALUES (@username, @email, @password) RETURNING username", conn);
-        insertCmd.Parameters.AddWithValue("@username", data.Username);
-        insertCmd.Parameters.AddWithValue("@email", data.Email);
+        insertCmd.Parameters.AddWithValue("@username", reqUsername);
+        insertCmd.Parameters.AddWithValue("@email", reqEmail);
         insertCmd.Parameters.AddWithValue("@password", hashedPassword);
         
         var result = await insertCmd.ExecuteScalarAsync();
@@ -68,18 +76,22 @@ app.MapPost("/api/login", async (HttpContext context) =>
 {
     try
     {
-        var data = await JsonSerializer.DeserializeAsync<LoginData>(context.Request.Body);
+        // Read as dictionary to handle both camelCase and PascalCase
+        var dict = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(context.Request.Body);
         
-        if (data == null || string.IsNullOrEmpty(data.Username))
+        if (dict == null || !dict.ContainsKey("username") || !dict.ContainsKey("password"))
         {
-            return Results.BadRequest(new { error = "Invalid request data" });
+            return Results.BadRequest(new { message = "Username and password required" });
         }
+        
+        string reqUsername = dict["username"];
+        string reqPassword = dict["password"];
         
         using var conn = new NpgsqlConnection(connectionString);
         await conn.OpenAsync();
         
         using var cmd = new NpgsqlCommand("SELECT username, password_hash FROM users WHERE username = @username OR email = @username", conn);
-        cmd.Parameters.AddWithValue("@username", data.Username);
+        cmd.Parameters.AddWithValue("@username", reqUsername);
         
         using var reader = await cmd.ExecuteReaderAsync();
         if (!await reader.ReadAsync())
@@ -88,7 +100,7 @@ app.MapPost("/api/login", async (HttpContext context) =>
         string responseUsername = reader.GetString(0);
         string storedHash = reader.GetString(1);
         
-        if (!BCrypt.Net.BCrypt.Verify(data.Password, storedHash))
+        if (!BCrypt.Net.BCrypt.Verify(reqPassword, storedHash))
             return Results.Json(new { message = "Invalid credentials" }, statusCode: 401);
         
         return Results.Json(new { message = "Login successful", username = responseUsername });
@@ -101,6 +113,3 @@ app.MapPost("/api/login", async (HttpContext context) =>
 });
 
 app.Run("http://0.0.0.0:8080");
-
-record RegisterData(string Username, string Email, string Password);
-record LoginData(string Username, string Password);
