@@ -1,3 +1,6 @@
+// API Base URL - Your ALB endpoint
+const API_BASE_URL = "http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com";
+
 // frontend/script.js
 let currentBackend = localStorage.getItem('selectedBackend') || 'fastapi';
 let currentMode = 'login';
@@ -26,7 +29,7 @@ function setMode(mode) {
 }
 
 function getApiUrl(endpoint) {
-    return `/api/${currentBackend}/${endpoint}`;
+    return `${API_BASE_URL}/api/${currentBackend}/${endpoint}`;
 }
 
 async function login() {
