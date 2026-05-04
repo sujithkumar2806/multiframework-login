@@ -6,8 +6,6 @@ pipeline {
         ECR_REGISTRY = '608380991635.dkr.ecr.us-east-1.amazonaws.com'
         EC2_BUILDER = '10.0.11.125'
         DEPLOY_PATH = '/home/ubuntu/multiframework-login'
-        S3_BUCKET = 'multiframework-frontend-1777874585'
-        CLOUDFRONT_ID = 'E2JMOVMJHY8Y6M'
     }
     
     stages {
@@ -18,24 +16,7 @@ pipeline {
             }
         }
         
-        stage('Upload Frontend to S3') {
-            steps {
-                echo 'Uploading frontend files to S3...'
-                sh """
-                    # Upload frontend files to S3
-                    aws s3 cp frontend/index.html s3://${S3_BUCKET}/index.html --content-type "text/html"
-                    aws s3 cp frontend/script.js s3://${S3_BUCKET}/script.js --content-type "application/javascript"
-                    aws s3 cp frontend/dashboard.html s3://${S3_BUCKET}/dashboard.html --content-type "text/html"
-                    
-                    # Invalidate CloudFront cache
-                    aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_ID} --paths "/*"
-                    
-                    echo "✅ Frontend deployed to S3 + CloudFront"
-                """
-            }
-        }
-        
-        stage('Build and Deploy Backend on EC2') {
+        stage('Build and Deploy on EC2') {
             steps {
                 echo 'Building images on EC2 and pushing to ECR...'
                 sh """
@@ -111,10 +92,10 @@ pipeline {
                 sh """
                     ssh ubuntu@${EC2_BUILDER} '
                         sleep 10
-                        echo "FastAPI: \$(curl -s http://localhost/api/fastapi/health)"
-                        echo "Django: \$(curl -s http://localhost/api/django/health)"
-                        echo "Node.js: \$(curl -s http://localhost/api/node/health)"
-                        echo ".NET: \$(curl -s http://localhost/api/dotnet/health)"
+                        echo "FastAPI: \$(curl -s http://localhost:8001/api/health)"
+                        echo "Django: \$(curl -s http://localhost:8002/api/health)"
+                        echo "Node.js: \$(curl -s http://localhost:8003/api/health)"
+                        echo ".NET: \$(curl -s http://localhost:8004/health)"
                     '
                 """
             }
@@ -123,7 +104,7 @@ pipeline {
     
     post {
         success {
-            echo '✅ Full deployment successful! Frontend + Backend updated.'
+            echo '✅ Build and deployment successful!'
         }
         failure {
             echo '❌ Deployment failed!'
