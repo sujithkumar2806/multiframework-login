@@ -1,7 +1,7 @@
 services:
   fastapi-backend:
     build: ./fastapi-server
-    container_name: fastapi-backend
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-fastapi:latest
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
     ports:
@@ -9,10 +9,16 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   django-backend:
     build: ./django-server
-    container_name: django-backend
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-django:latest
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
     ports:
@@ -20,10 +26,16 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   node-backend:
     build: ./node-server
-    container_name: node-backend
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-node:latest
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
@@ -36,10 +48,16 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   dotnet-backend:
     build: ./dotnet-server
-    container_name: dotnet-backend
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-dotnet:latest
     environment:
       DATABASE_URL: Host=${DB_HOST};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
     ports:
@@ -47,6 +65,33 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-api.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - app-network
+    depends_on:
+      - fastapi-backend
+      - django-backend
+      - node-backend
+      - dotnet-backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   app-network:

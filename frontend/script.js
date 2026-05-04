@@ -1,9 +1,5 @@
-// API Base URL - Your ALB endpoint
-const API_BASE_URL = "http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com";
-
-// frontend/script.js
+const API_BASE_URL = 'http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com';
 let currentBackend = localStorage.getItem('selectedBackend') || 'fastapi';
-let currentMode = 'login';
 
 function setBackend(backend) {
     currentBackend = backend;
@@ -12,11 +8,9 @@ function setBackend(backend) {
     event.target.classList.add('active');
     document.getElementById('backend-name').innerText = backend.toUpperCase();
     showMessage(`Switched to ${backend.toUpperCase()} backend`, 'success');
-    testBackendHealth();
 }
 
 function setMode(mode) {
-    currentMode = mode;
     if (mode === 'login') {
         document.getElementById('login-form').style.display = 'block';
         document.getElementById('register-form').style.display = 'none';
@@ -35,27 +29,21 @@ function getApiUrl(endpoint) {
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
-
     if (!username || !password) {
         showMessage('Please fill all fields', 'error');
         return;
     }
-
     try {
         const response = await fetch(getApiUrl('login'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-
         const data = await response.json();
-        
         if (response.ok) {
-            showMessage('Login successful! Redirecting...', 'success');
-            // Store username for welcome page
             localStorage.setItem('loggedInUser', username);
             localStorage.setItem('userBackend', currentBackend);
-            // Redirect to dashboard after 1 second
+            showMessage('Login successful! Redirecting...', 'success');
             setTimeout(() => {
                 window.location.href = '/dashboard.html';
             }, 1000);
@@ -64,7 +52,7 @@ async function login() {
         }
     } catch (error) {
         console.error('Login error:', error);
-        showMessage('Network error. Please check your connection.', 'error');
+        showMessage('Network error: ' + error.message, 'error');
     }
 }
 
@@ -73,38 +61,23 @@ async function register() {
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
     const confirm = document.getElementById('reg-confirm').value;
-
     if (!username || !email || !password) {
         showMessage('Please fill all fields', 'error');
         return;
     }
-
     if (password !== confirm) {
         showMessage('Passwords do not match', 'error');
         return;
     }
-
-    if (password.length < 4) {
-        showMessage('Password must be at least 4 characters', 'error');
-        return;
-    }
-
     try {
         const response = await fetch(getApiUrl('register'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password })
         });
-
         const data = await response.json();
-        
         if (response.ok) {
             showMessage('Registration successful! Please login.', 'success');
-            // Clear form and switch to login
-            document.getElementById('reg-username').value = '';
-            document.getElementById('reg-email').value = '';
-            document.getElementById('reg-password').value = '';
-            document.getElementById('reg-confirm').value = '';
             setMode('login');
             document.getElementById('login-username').value = username;
         } else {
@@ -112,17 +85,7 @@ async function register() {
         }
     } catch (error) {
         console.error('Register error:', error);
-        showMessage('Network error. Please try again.', 'error');
-    }
-}
-
-async function testBackendHealth() {
-    try {
-        const response = await fetch(getApiUrl('health'));
-        const data = await response.json();
-        console.log(`${currentBackend} health:`, data);
-    } catch (error) {
-        console.error(`${currentBackend} health check failed:`, error);
+        showMessage('Network error: ' + error.message, 'error');
     }
 }
 
@@ -131,16 +94,7 @@ function showMessage(msg, type) {
     msgDiv.textContent = msg;
     msgDiv.className = `message ${type}`;
     msgDiv.style.display = 'block';
-    setTimeout(() => {
-        msgDiv.style.display = 'none';
-    }, 3000);
+    setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
 }
 
-// Initialize
 document.getElementById('backend-name').innerText = currentBackend.toUpperCase();
-document.querySelectorAll('.backend-btn').forEach(btn => {
-    if (btn.innerText.toLowerCase() === currentBackend) {
-        btn.classList.add('active');
-    }
-});
-testBackendHealth();

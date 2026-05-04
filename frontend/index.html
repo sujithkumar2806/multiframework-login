@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi Framework Login System</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,7 +14,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .container {
             background: white;
             border-radius: 20px;
@@ -29,35 +23,18 @@
             max-width: 90%;
             animation: fadeIn 0.5s ease-in;
         }
-
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 14px; }
         .backend-selector {
             display: flex;
             gap: 10px;
@@ -65,7 +42,6 @@
             background: #f8f9fa;
             border-bottom: 1px solid #e0e0e0;
         }
-
         .backend-btn {
             flex: 1;
             padding: 10px;
@@ -75,26 +51,19 @@
             font-weight: bold;
             transition: all 0.3s;
         }
-
         .backend-btn.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-
         .backend-btn.fastapi { background: #059669; color: white; }
         .backend-btn.django { background: #0C4B33; color: white; }
         .backend-btn.node { background: #339933; color: white; }
         .backend-btn.dotnet { background: #512BD4; color: white; }
-
-        .form-container {
-            padding: 30px;
-        }
-
+        .form-container { padding: 30px; }
         .input-group {
             margin-bottom: 20px;
             position: relative;
         }
-
         .input-group input {
             width: 100%;
             padding: 12px 15px;
@@ -104,12 +73,7 @@
             transition: all 0.3s;
             outline: none;
         }
-
-        .input-group input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
-        }
-
+        .input-group input:focus { border-color: #667eea; }
         button {
             width: 100%;
             padding: 14px;
@@ -121,17 +85,12 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-        }
-
+        button:hover { transform: translateY(-2px); }
         .toggle-buttons {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
-
         .toggle-btn {
             flex: 1;
             padding: 10px;
@@ -139,12 +98,10 @@
             color: #333;
             margin-bottom: 0;
         }
-
         .toggle-btn.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-
         .message {
             margin-top: 20px;
             padding: 10px;
@@ -152,19 +109,8 @@
             text-align: center;
             display: none;
         }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
+        .message.success { background: #d4edda; color: #155724; }
+        .message.error { background: #f8d7da; color: #721c24; }
         .framework-badge {
             text-align: center;
             margin-top: 20px;
@@ -194,164 +140,21 @@
                 <button class="toggle-btn" onclick="setMode('register')">Register</button>
             </div>
             <div id="login-form">
-                <div class="input-group">
-                    <input type="text" id="login-username" placeholder=" ">
-                    <label>Username or Email</label>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="login-password" placeholder=" ">
-                    <label>Password</label>
-                </div>
+                <div class="input-group"><input type="text" id="login-username" placeholder=" "><label>Username or Email</label></div>
+                <div class="input-group"><input type="password" id="login-password" placeholder=" "><label>Password</label></div>
                 <button onclick="login()">Login</button>
             </div>
             <div id="register-form" style="display: none;">
-                <div class="input-group">
-                    <input type="text" id="reg-username" placeholder=" ">
-                    <label>Username</label>
-                </div>
-                <div class="input-group">
-                    <input type="email" id="reg-email" placeholder=" ">
-                    <label>Email</label>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="reg-password" placeholder=" ">
-                    <label>Password</label>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="reg-confirm" placeholder=" ">
-                    <label>Confirm Password</label>
-                </div>
+                <div class="input-group"><input type="text" id="reg-username" placeholder=" "><label>Username</label></div>
+                <div class="input-group"><input type="email" id="reg-email" placeholder=" "><label>Email</label></div>
+                <div class="input-group"><input type="password" id="reg-password" placeholder=" "><label>Password</label></div>
+                <div class="input-group"><input type="password" id="reg-confirm" placeholder=" "><label>Confirm Password</label></div>
                 <button onclick="register()">Create Account</button>
             </div>
             <div id="message" class="message"></div>
-            <div class="framework-badge" id="framework-badge">
-                Connected to: <span id="backend-name">FastAPI</span>
-            </div>
+            <div class="framework-badge">Connected to: <span id="backend-name">FastAPI</span></div>
         </div>
     </div>
-
-    <script>
-        let currentBackend = localStorage.getItem('selectedBackend') || 'fastapi';
-        let currentMode = 'login';
-
-        function setBackend(backend) {
-            currentBackend = backend;
-            localStorage.setItem('selectedBackend', backend);
-            document.querySelectorAll('.backend-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('backend-name').innerText = backend.toUpperCase();
-            showMessage(`Switched to ${backend.toUpperCase()} backend`, 'success');
-            testBackendHealth();
-        }
-
-        function setMode(mode) {
-            currentMode = mode;
-            if (mode === 'login') {
-                document.getElementById('login-form').style.display = 'block';
-                document.getElementById('register-form').style.display = 'none';
-            } else {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('register-form').style.display = 'block';
-            }
-            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        function getApiUrl(endpoint) {
-            return `/api/${currentBackend}/${endpoint}`;
-        }
-
-        async function login() {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-
-            if (!username || !password) {
-                showMessage('Please fill all fields', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(getApiUrl('login'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    showMessage('Login successful!', 'success');
-                    setTimeout(() => window.location.href = '/dashboard.html', 1500);
-                } else {
-                    showMessage(data.message || data.detail || 'Login failed', 'error');
-                }
-            } catch (error) {
-                showMessage('Network error: ' + error.message, 'error');
-            }
-        }
-
-        async function register() {
-            const username = document.getElementById('reg-username').value;
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const confirm = document.getElementById('reg-confirm').value;
-
-            if (!username || !email || !password) {
-                showMessage('Please fill all fields', 'error');
-                return;
-            }
-
-            if (password !== confirm) {
-                showMessage('Passwords do not match', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(getApiUrl('register'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    showMessage('Registration successful! Please login.', 'success');
-                    setMode('login');
-                } else {
-                    showMessage(data.message || data.detail || 'Registration failed', 'error');
-                }
-            } catch (error) {
-                showMessage('Network error: ' + error.message, 'error');
-            }
-        }
-
-        async function testBackendHealth() {
-            try {
-                const response = await fetch(getApiUrl('health'));
-                const data = await response.json();
-                console.log(`${currentBackend} health:`, data);
-            } catch (error) {
-                console.error(`${currentBackend} health check failed:`, error);
-            }
-        }
-
-        function showMessage(msg, type) {
-            const msgDiv = document.getElementById('message');
-            msgDiv.textContent = msg;
-            msgDiv.className = `message ${type}`;
-            msgDiv.style.display = 'block';
-            setTimeout(() => {
-                msgDiv.style.display = 'none';
-            }, 3000);
-        }
-
-        // Initialize
-        document.getElementById('backend-name').innerText = currentBackend.toUpperCase();
-        document.querySelectorAll('.backend-btn').forEach(btn => {
-            if (btn.innerText.toLowerCase() === currentBackend) {
-                btn.classList.add('active');
-            }
-        });
-        testBackendHealth();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
