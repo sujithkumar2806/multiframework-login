@@ -14,29 +14,38 @@ pipeline {
             }
         }
         
-        stage('Deploy to EC2') {
+        stage('Deploy Backends to EC2') {
             steps {
-                echo 'Deploying to private EC2...'
+                echo 'Deploying backends to private EC2...'
                 sh """
-                    ssh ubuntu@${PRIVATE_EC2} '
+                    ssh -o StrictHostKeyChecking=no ubuntu@${PRIVATE_EC2} '
                         cd ${DEPLOY_PATH}
                         git pull origin main
                         docker-compose down
                         docker-compose build --no-cache
                         docker-compose up -d
+                        
+                        # Restart nginx-api if exists
+                        docker restart nginx-api 2>/dev/null || echo "nginx-api not running"
                     '
                 """
             }
         }
         
-        stage('Verify Deployment') {
+        stage('Verify Backends') {
             steps {
-                echo 'Verifying deployment...'
+                echo 'Verifying backends...'
                 sh """
                     ssh ubuntu@${PRIVATE_EC2} '
-                        sleep 10
-                        docker ps --format "table {{.Names}}\t{{.Status}}"
-                        curl -s http://localhost | grep -q "backend-selector" && echo "✅ New frontend deployed" || echo "⚠️ Old frontend still present"
+                        sleep 5
+                        curl -s http://localhost/api/fastapi/health
+                        echo ""
+                        curl -s http://localhost/api/django/health
+                        echo ""
+                        curl -s http://localhost/api/node/health
+                        echo ""
+                        curl -s http://localhost/api/dotnet/health
+                        echo ""
                     '
                 """
             }
@@ -45,8 +54,8 @@ pipeline {
     
     post {
         success {
-            echo '✅ Application deployed successfully!'
-            echo 'Access at: http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com'
+            echo '✅ Backends deployed successfully!'
+            echo 'Frontend is hosted at: http://multiframework-frontend-1777874585.s3-website-us-east-1.amazonaws.com'
         }
         failure {
             echo '❌ Deployment failed. Please check the logs.'
