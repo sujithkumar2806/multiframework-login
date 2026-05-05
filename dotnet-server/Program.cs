@@ -4,6 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using System.Text.Json;
 
+// Global counters
+int requestCount = 0;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors();
 var app = builder.Build();
@@ -18,18 +21,22 @@ string password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "SecurePa
 
 string connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
 
-// Health check endpoints
-app.MapGet("/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
-app.MapGet("/api/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
+app.MapGet("/health", () => {
+    requestCount++;
+    return Results.Json(new { status = "healthy", framework = ".NET 🚀" });
+});
 
-// Prometheus metrics endpoint - SINGLE definition
-app.MapGet("/metrics", () => Results.Text(@"
-# HELP http_requests_total Total HTTP requests
+app.MapGet("/api/health", () => {
+    requestCount++;
+    return Results.Json(new { status = "healthy", framework = ".NET 🚀" });
+});
+
+app.MapGet("/metrics", () => Results.Text($@"# HELP http_requests_total Total HTTP requests
 # TYPE http_requests_total counter
-http_requests_total{framework=""dotnet"",method=""GET"",endpoint=""/api/health""} 0
+http_requests_total{{framework=""dotnet""}} {requestCount}
 # HELP up Was the last scrape of .NET successful
 # TYPE up gauge
-up{job=""dotnet-backend""} 1
+up{{job=""dotnet-backend""}} 1
 ", "text/plain"));
 
 app.MapPost("/api/register", async (HttpContext context) =>
