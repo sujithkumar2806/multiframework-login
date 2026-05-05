@@ -17,6 +17,7 @@ services:
       start_period: 40s
 
   django-backend:
+    build: ./django-server
     image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-django:latest
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -54,6 +55,7 @@ services:
       start_period: 40s
 
   dotnet-backend:
+    build: ./dotnet-server
     image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-dotnet:latest
     environment:
       DATABASE_URL: Host=${DB_HOST};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
