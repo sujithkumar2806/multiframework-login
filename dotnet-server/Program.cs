@@ -113,4 +113,13 @@ app.MapPost("/api/login", async (HttpContext context) =>
     }
 });
 
+app.MapGet("/metrics", () => Results.Text(@"
+# HELP http_requests_total Total HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{framework=""dotnet"",method=""GET"",endpoint=""/api/health""} 0
+# HELP up Was the last scrape of .NET successful
+# TYPE up gauge
+up{job=""dotnet-backend""} 1
+", "text/plain"));
+
 app.Run("http://0.0.0.0:8080");
