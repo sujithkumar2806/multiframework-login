@@ -1,15 +1,14 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, String, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
 from prometheus_client import Counter, Histogram, generate_latest, REGISTRY
-from starlette.responses import Response
 import bcrypt
 import os
-
 
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dbadmin:SecurePass123!@multiframework-db.c4fuy0s4wc4o.us-east-1.rds.amazonaws.com:5432/postgres")
@@ -53,23 +52,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Helper functions
-def get_user_by_username(db: Session, username: str):
-    return db.query(User).filter(User.username == username).first()
-
-def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
-
-# API endpoints
-
-# Metrics
+# Prometheus Metrics
 REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'framework'])
 REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration', ['method', 'endpoint', 'framework'])
 
@@ -90,13 +73,27 @@ async def metrics_middleware(request: Request, call_next):
 async def metrics():
     return Response(content=generate_latest(REGISTRY), media_type="text/plain")
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Helper functions
+def get_user_by_username(db: Session, username: str):
+    return db.query(User).filter(User.username == username).first()
+
+def get_user_by_email(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()
+
+# API endpoints
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "framework": "FastAPI 🚀"}
 
 @app.post("/api/register")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
-    # Check if user exists
     existing_user = get_user_by_username(db, user.username)
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -105,7 +102,6 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create new user with bcrypt hash
     hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt(12)).decode('utf-8')
     db_user = User(
         username=user.username,
@@ -121,7 +117,6 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @app.post("/api/login")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
-    # Find user by username or email
     db_user = get_user_by_username(db, user.username)
     if not db_user:
         db_user = get_user_by_email(db, user.username)
@@ -129,7 +124,6 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Verify password with bcrypt
     if not bcrypt.checkpw(user.password.encode('utf-8'), db_user.password_hash.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
