@@ -1,39 +1,48 @@
 {
-  "dashboard": {
-    "title": "Multi-Framework Backend Metrics",
-    "description": "Real-time metrics for all backends",
-    "tags": ["fastapi", "django", "nodejs", "dotnet"],
-    "timezone": "browser",
-    "panels": [
-      {
-        "id": 1,
-        "title": "FastAPI Request Rate",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "rate(http_requests_total{framework=\"fastapi\"}[5m])",
-            "legendFormat": "FastAPI",
-            "refId": "A"
-          }
-        ],
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
-      },
-      {
-        "id": 2,
-        "title": "Node.js Request Rate",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "rate(http_requests_total{framework=\"node\"}[5m])",
-            "legendFormat": "Node.js",
-            "refId": "A"
-          }
-        ],
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
-      }
-    ],
-    "refresh": "30s",
-    "schemaVersion": 27,
-    "version": 1
-  }
+  "title": "Backend Metrics",
+  "uid": "backend-metrics",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate - FastAPI",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{framework=\"fastapi\"}[5m])",
+          "legendFormat": "FastAPI",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "Request Rate - Node.js",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{framework=\"node\"}[5m])",
+          "legendFormat": "Node.js",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "id": 3,
+      "title": "Request Rate - All Backends",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[5m])",
+          "legendFormat": "{{framework}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 27,
+  "version": 1
 }
