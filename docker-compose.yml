@@ -9,7 +9,8 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      # Use wget — it's in the python:slim base image, curl is not
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -25,7 +26,7 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -45,7 +46,8 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      # node:alpine has wget built in
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -61,11 +63,12 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      # dotnet aspnet image has no curl/wget — use dotnet's built-in HTTP client
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   nginx:
     image: nginx:alpine
@@ -89,8 +92,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.external-url=/prometheus/'   # tells Prometheus it lives at /prometheus/
-      - '--web.route-prefix=/'              # keeps internal routing working
+      - '--web.external-url=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com/prometheus/'
+      - '--web.route-prefix=/prometheus/'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -101,12 +104,12 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    # No ports exposed — access via nginx /grafana/
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SERVER_ROOT_URL=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SERVER_DOMAIN=multiframework-alb-1441586806.us-east-1.elb.amazonaws.com
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
@@ -118,7 +121,6 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
-    # No ports exposed — scraped internally by prometheus
     networks:
       - app-network
     restart: unless-stopped
@@ -126,7 +128,6 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
-    # No ports exposed — scraped internally by prometheus
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -144,4 +145,4 @@ networks:
 
 volumes:
   grafana_data:
-  prometheus_data:  
+  prometheus_data:

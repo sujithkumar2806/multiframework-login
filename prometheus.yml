@@ -4,6 +4,7 @@ global:
 
 scrape_configs:
   - job_name: 'prometheus'
+    metrics_path: /prometheus/metrics
     static_configs:
       - targets: ['localhost:9090']
 
@@ -15,18 +16,5 @@ scrape_configs:
     static_configs:
       - targets: ['cadvisor:8080']
 
-  - job_name: 'fastapi-backend'
-    static_configs:
-      - targets: ['fastapi-backend:8000']
-
-  - job_name: 'django-backend'
-    static_configs:
-      - targets: ['django-backend:8000']
-
-  - job_name: 'node-backend'
-    static_configs:
-      - targets: ['node-backend:3000']
-
-  - job_name: 'dotnet-backend'
-    static_configs:
-      - targets: ['dotnet-backend:8080']
+  # Removed backend scrape targets — they don't expose /metrics
+  # Add them back only after adding prometheus-client to each backend
