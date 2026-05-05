@@ -5,43 +5,29 @@
     "panels": [
       {
         "id": 1,
-        "title": "Request Rate - FastAPI",
+        "title": "Request Rate - All Frameworks",
         "type": "graph",
-        "targets": [{"expr": "rate(http_requests_total{framework=\"fastapi\"}[5m])", "legendFormat": "FastAPI", "refId": "A"}],
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (framework)",
+            "legendFormat": "{{framework}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
       },
       {
         "id": 2,
-        "title": "Request Rate - Node.js",
-        "type": "graph",
-        "targets": [{"expr": "rate(http_requests_total{framework=\"node\"}[5m])", "legendFormat": "Node.js", "refId": "A"}],
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
-      },
-      {
-        "id": 3,
-        "title": "Request Rate - Django",
-        "type": "graph",
-        "targets": [{"expr": "rate(http_requests_total{framework=\"django\"}[5m])", "legendFormat": "Django", "refId": "A"}],
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
-      },
-      {
-        "id": 4,
-        "title": "Request Rate - .NET",
-        "type": "graph",
-        "targets": [{"expr": "rate(http_requests_total{framework=\"dotnet\"}[5m])", "legendFormat": ".NET", "refId": "A"}],
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
-      },
-      {
-        "id": 5,
-        "title": "All Backends Comparison",
-        "type": "graph",
+        "title": "Total Requests by Framework",
+        "type": "bargauge",
         "targets": [
-          {"expr": "sum(rate(http_requests_total{framework=\"fastapi\"}[5m]))", "legendFormat": "FastAPI", "refId": "A"},
-          {"expr": "sum(rate(http_requests_total{framework=\"node\"}[5m]))", "legendFormat": "Node.js", "refId": "B"},
-          {"expr": "sum(rate(http_requests_total{framework=\"django\"}[5m]))", "legendFormat": "Django", "refId": "C"},
-          {"expr": "sum(rate(http_requests_total{framework=\"dotnet\"}[5m]))", "legendFormat": ".NET", "refId": "D"}
+          {
+            "expr": "sum(http_requests_total) by (framework)",
+            "legendFormat": "{{framework}}",
+            "refId": "A"
+          }
         ],
-        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
       }
     ],
     "refresh": "30s",
