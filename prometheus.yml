@@ -1,3 +1,23 @@
+# global:
+#   scrape_interval: 15s
+#   evaluation_interval: 15s
+
+# scrape_configs:
+#   - job_name: 'prometheus'
+#     metrics_path: /prometheus/metrics
+#     static_configs:
+#       - targets: ['localhost:9090']
+
+#   - job_name: 'node-exporter'
+#     static_configs:
+#       - targets: ['node-exporter:9100']
+
+#   - job_name: 'cadvisor'
+#     static_configs:
+#       - targets: ['cadvisor:8080']
+
+#   # Removed backend scrape targets — they don't expose /metrics
+#   # Add them back only after adding prometheus-client to each backend
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -16,5 +36,22 @@ scrape_configs:
     static_configs:
       - targets: ['cadvisor:8080']
 
-  # Removed backend scrape targets — they don't expose /metrics
-  # Add them back only after adding prometheus-client to each backend
+  - job_name: 'fastapi-backend'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['fastapi-backend:8000']
+
+  - job_name: 'django-backend'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['django-backend:8000']
+
+  - job_name: 'node-backend'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['node-backend:3000']
+
+  - job_name: 'dotnet-backend'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['dotnet-backend:8080']

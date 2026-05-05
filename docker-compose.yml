@@ -118,8 +118,8 @@ services:
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
     - app-network
-  restart: unless-stopped
-  depends_on:
+    restart: unless-stopped
+    depends_on:
     - prometheus
       
 
