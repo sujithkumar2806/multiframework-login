@@ -1,0 +1,56 @@
+{
+  "dashboard": {
+    "title": "Infrastructure & Container Health",
+    "description": "EC2 and Container metrics with cAdvisor & Node Exporter",
+    "tags": ["infrastructure", "docker", "ec2"],
+    "panels": [
+      {
+        "id": 1,
+        "title": "EC2 CPU Usage",
+        "type": "graph",
+        "targets": [
+          {"expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU Used %"}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "EC2 Memory Usage",
+        "type": "graph",
+        "targets": [
+          {"expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100", "legendFormat": "Memory Used %"}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Per-Container CPU Usage",
+        "type": "graph",
+        "targets": [
+          {"expr": "sum(rate(container_cpu_usage_seconds_total{name!=\"\"}[5m])) by (name)", "legendFormat": "{{name}}"}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Per-Container Memory Usage",
+        "type": "graph",
+        "targets": [
+          {"expr": "sum(container_memory_working_set_bytes{name!=\"\"}) by (name)", "legendFormat": "{{name}}"}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Container Status (Up/Down)",
+        "type": "table",
+        "targets": [
+          {"expr": "count(container_last_seen) by (name)", "legendFormat": "Running"}
+        ],
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 16}
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 27
+  }
+}

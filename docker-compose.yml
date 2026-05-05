@@ -104,19 +104,24 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    ports:
+    - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SERVER_ROOT_URL=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
-      - GF_SERVER_DOMAIN=multiframework-alb-1441586806.us-east-1.elb.amazonaws.com
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
-      - app-network
-    restart: unless-stopped
-    depends_on:
-      - prometheus
+    - app-network
+  restart: unless-stopped
+  depends_on:
+    - prometheus
+      
 
   node-exporter:
     image: prom/node-exporter:latest

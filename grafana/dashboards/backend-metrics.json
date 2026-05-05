@@ -1,0 +1,89 @@
+{
+  "dashboard": {
+    "title": "Multi-Framework Backend Metrics",
+    "description": "Real-time metrics for FastAPI, Django, Node.js, and .NET backends",
+    "tags": ["fastapi", "django", "nodejs", "dotnet", "performance"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "FastAPI - Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{framework=\"fastapi\"}[5m])",
+            "legendFormat": "{{method}} {{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Django - Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{framework=\"django\"}[5m])",
+            "legendFormat": "{{method}} {{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Node.js - Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{framework=\"node\"}[5m])",
+            "legendFormat": "{{method}} {{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": ".NET - Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{framework=\"dotnet\"}[5m])",
+            "legendFormat": "{{method}} {{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Response Time Comparison",
+        "type": "graph",
+        "targets": [
+          {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{framework=\"fastapi\"}[5m])) by (le))", "legendFormat": "FastAPI P95"},
+          {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{framework=\"django\"}[5m])) by (le))", "legendFormat": "Django P95"},
+          {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{framework=\"node\"}[5m])) by (le))", "legendFormat": "Node.js P95"},
+          {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{framework=\"dotnet\"}[5m])) by (le))", "legendFormat": ".NET P95"}
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Active Connections",
+        "type": "stat",
+        "targets": [
+          {"expr": "sum(active_connections{framework=\"fastapi\"})", "legendFormat": "FastAPI"},
+          {"expr": "sum(active_connections{framework=\"django\"})", "legendFormat": "Django"},
+          {"expr": "sum(active_connections{framework=\"node\"})", "legendFormat": "Node.js"},
+          {"expr": "sum(active_connections{framework=\"dotnet\"})", "legendFormat": ".NET"}
+        ],
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 24}
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1
+  }
+}
