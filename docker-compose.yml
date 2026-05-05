@@ -86,7 +86,11 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    # No ports exposed — access via nginx /prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.external-url=/prometheus/'   # tells Prometheus it lives at /prometheus/
+      - '--web.route-prefix=/'              # keeps internal routing working
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
