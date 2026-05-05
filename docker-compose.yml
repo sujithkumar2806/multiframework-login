@@ -10,7 +10,6 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      # Use wget — it's in the python:slim base image, curl is not
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
       timeout: 10s
@@ -48,7 +47,6 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      # node:alpine has wget built in
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
@@ -65,7 +63,6 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      # dotnet aspnet image has no curl/wget — use dotnet's built-in HTTP client
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
@@ -91,6 +88,8 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
+    ports:
+      - "9090:9090"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -107,7 +106,7 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
-    - "3000:3000"
+      - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin
@@ -119,11 +118,10 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
-    - app-network
+      - app-network
     restart: unless-stopped
     depends_on:
-    - prometheus
-      
+      - prometheus
 
   node-exporter:
     image: prom/node-exporter:latest
