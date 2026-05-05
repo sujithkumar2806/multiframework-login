@@ -21,6 +21,7 @@ string connectionString = $"Host={host};Port={port};Database={database};Username
 // Health check endpoints
 app.MapGet("/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
 app.MapGet("/api/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
+app.MapGet("/metrics", () => "# No metrics yet\n");
 
 app.MapPost("/api/register", async (HttpContext context) =>
 {

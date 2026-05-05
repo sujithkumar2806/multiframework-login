@@ -3,12 +3,47 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const url = require('url');
+const client = require('prom-client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Initialize Prometheus metrics
+const httpRequestDurationMicroseconds = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'framework']
+});
+
+const httpRequestsTotal = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'framework']
+});
+
+// Collect default metrics (CPU, memory, etc)
+client.collectDefaultMetrics();
+
 app.use(cors());
 app.use(express.json());
+
+// Metrics middleware
+app.use((req, res, next) => {
+  const end = httpRequestDurationMicroseconds.startTimer();
+  res.on('finish', () => {
+    const route = req.route ? req.route.path : req.path;
+    const method = req.method;
+    end({ method: method, route: route, framework: 'node' });
+    httpRequestsTotal.inc({ method: method, route: route, framework: 'node' });
+  });
+  next();
+});
+
+// Metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
 // Parse DATABASE_URL and add SSL
 const dbUrl = process.env.DATABASE_URL || 'postgresql://dbadmin:SecurePass123!@multiframework-db.c4fuy0s4wc4o.us-east-1.rds.amazonaws.com:5432/postgres';

@@ -5,8 +5,11 @@ from sqlalchemy import create_engine, Column, String, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
+from prometheus_client import Counter, Histogram, generate_latest, REGISTRY
+from starlette.responses import Response
 import bcrypt
 import os
+
 
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dbadmin:SecurePass123!@multiframework-db.c4fuy0s4wc4o.us-east-1.rds.amazonaws.com:5432/postgres")
@@ -65,6 +68,28 @@ def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
 # API endpoints
+
+# Metrics
+REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'framework'])
+REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration', ['method', 'endpoint', 'framework'])
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    method = request.method
+    endpoint = request.url.path
+    framework = "fastapi"
+    
+    REQUEST_COUNT.labels(method=method, endpoint=endpoint, framework=framework).inc()
+    
+    with REQUEST_DURATION.labels(method=method, endpoint=endpoint, framework=framework).time():
+        response = await call_next(request)
+    
+    return response
+
+@app.get("/metrics")
+async def metrics():
+    return Response(content=generate_latest(REGISTRY), media_type="text/plain")
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "framework": "FastAPI 🚀"}
