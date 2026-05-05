@@ -29,13 +29,17 @@ app.use(express.json());
 
 // Metrics middleware
 app.use((req, res, next) => {
-  const end = httpRequestDurationMicroseconds.startTimer();
-  res.on('finish', () => {
-    const route = req.route ? req.route.path : req.path;
-    const method = req.method;
-    end({ method: method, route: route, framework: 'node' });
-    httpRequestsTotal.inc({ method: method, route: route, framework: 'node' });
-  });
+  const route = req.route ? req.route.path : req.path;
+  const method = req.method;
+  
+  // Skip counting /metrics endpoint
+  if (route !== '/metrics') {
+    const end = httpRequestDurationMicroseconds.startTimer();
+    res.on('finish', () => {
+      end({ method: method, route: route, framework: 'node' });
+      httpRequestsTotal.inc({ method: method, route: route, framework: 'node' });
+    });
+  }
   next();
 });
 

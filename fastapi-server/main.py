@@ -62,9 +62,13 @@ async def metrics_middleware(request: Request, call_next):
     endpoint = request.url.path
     framework = "fastapi"
     
-    REQUEST_COUNT.labels(method=method, endpoint=endpoint, framework=framework).inc()
-    
-    with REQUEST_DURATION.labels(method=method, endpoint=endpoint, framework=framework).time():
+    # Skip counting the /metrics endpoint to avoid duplication
+    if endpoint != "/metrics":
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, framework=framework).inc()
+        
+        with REQUEST_DURATION.labels(method=method, endpoint=endpoint, framework=framework).time():
+            response = await call_next(request)
+    else:
         response = await call_next(request)
     
     return response
