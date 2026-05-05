@@ -21,13 +21,21 @@ string connectionString = $"Host={host};Port={port};Database={database};Username
 // Health check endpoints
 app.MapGet("/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
 app.MapGet("/api/health", () => Results.Json(new { status = "healthy", framework = ".NET 🚀" }));
-app.MapGet("/metrics", () => "# No metrics yet\n");
+
+// Prometheus metrics endpoint - SINGLE definition
+app.MapGet("/metrics", () => Results.Text(@"
+# HELP http_requests_total Total HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{framework=""dotnet"",method=""GET"",endpoint=""/api/health""} 0
+# HELP up Was the last scrape of .NET successful
+# TYPE up gauge
+up{job=""dotnet-backend""} 1
+", "text/plain"));
 
 app.MapPost("/api/register", async (HttpContext context) =>
 {
     try
     {
-        // Read as dictionary to handle both camelCase and PascalCase
         var dict = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(context.Request.Body);
         
         if (dict == null || !dict.ContainsKey("username"))
@@ -47,7 +55,6 @@ app.MapPost("/api/register", async (HttpContext context) =>
         using var conn = new NpgsqlConnection(connectionString);
         await conn.OpenAsync();
         
-        // Check if user exists
         using var checkCmd = new NpgsqlCommand("SELECT id FROM users WHERE username = @username OR email = @email", conn);
         checkCmd.Parameters.AddWithValue("@username", reqUsername);
         checkCmd.Parameters.AddWithValue("@email", reqEmail);
@@ -55,7 +62,6 @@ app.MapPost("/api/register", async (HttpContext context) =>
         if (await checkCmd.ExecuteScalarAsync() != null)
             return Results.BadRequest(new { message = "Username already exists" });
         
-        // Hash password with bcrypt
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(reqPassword, 12);
         
         using var insertCmd = new NpgsqlCommand("INSERT INTO users (username, email, password_hash) VALUES (@username, @email, @password) RETURNING username", conn);
@@ -77,7 +83,6 @@ app.MapPost("/api/login", async (HttpContext context) =>
 {
     try
     {
-        // Read as dictionary to handle both camelCase and PascalCase
         var dict = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(context.Request.Body);
         
         if (dict == null || !dict.ContainsKey("username") || !dict.ContainsKey("password"))
@@ -112,14 +117,5 @@ app.MapPost("/api/login", async (HttpContext context) =>
         return Results.Json(new { error = ex.Message }, statusCode: 500);
     }
 });
-
-app.MapGet("/metrics", () => Results.Text(@"
-# HELP http_requests_total Total HTTP requests
-# TYPE http_requests_total counter
-http_requests_total{framework=""dotnet"",method=""GET"",endpoint=""/api/health""} 0
-# HELP up Was the last scrape of .NET successful
-# TYPE up gauge
-up{job=""dotnet-backend""} 1
-", "text/plain"));
 
 app.Run("http://0.0.0.0:8080");
