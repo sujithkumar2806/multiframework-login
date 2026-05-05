@@ -11,6 +11,10 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
 
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
   - job_name: 'fastapi-backend'
     static_configs:
       - targets: ['fastapi-backend:8000']
@@ -26,7 +30,3 @@ scrape_configs:
   - job_name: 'dotnet-backend'
     static_configs:
       - targets: ['dotnet-backend:8080']
-
-  - job_name: 'nginx'
-    static_configs:
-      - targets: ['nginx-api:80']

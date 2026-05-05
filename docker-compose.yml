@@ -1,6 +1,5 @@
 services:
   fastapi-backend:
-    build: ./fastapi-server
     image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-fastapi:latest
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -17,7 +16,6 @@ services:
       start_period: 40s
 
   django-backend:
-    build: ./django-server
     image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-django:latest
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -34,7 +32,6 @@ services:
       start_period: 40s
 
   node-backend:
-    build: ./node-server
     image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-node:latest
     environment:
       DB_HOST: ${DB_HOST}
@@ -42,7 +39,6 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_PORT: ${DB_PORT}
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
     ports:
       - "8003:3000"
     networks:
@@ -56,7 +52,6 @@ services:
       start_period: 40s
 
   dotnet-backend:
-    build: ./dotnet-server
     image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework-dotnet:latest
     environment:
       DATABASE_URL: Host=${DB_HOST};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
@@ -87,20 +82,14 @@ services:
       - node-backend
       - dotnet-backend
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-      - "9090:9090"
+    # No ports exposed — access via nginx /prometheus/
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
     networks:
       - app-network
     restart: unless-stopped
@@ -108,8 +97,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    ports:
-      - "3000:3000"
+    # No ports exposed — access via nginx /grafana/
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin
@@ -126,8 +114,22 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
-    ports:
-      - "9100:9100"
+    # No ports exposed — scraped internally by prometheus
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    # No ports exposed — scraped internally by prometheus
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
     networks:
       - app-network
     restart: unless-stopped
@@ -138,6 +140,4 @@ networks:
 
 volumes:
   grafana_data:
-
-  
-  
+  prometheus_data:  
