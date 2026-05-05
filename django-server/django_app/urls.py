@@ -2,15 +2,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
 
-# Simple counter - using a mutable list so it persists
-request_counter = [0]
+# Use a simple integer that we'll update
+counter = 0
 
 def metrics_view(request):
+    global counter
     metrics_data = f'''# HELP http_requests_total Total HTTP requests
 # TYPE http_requests_total counter
-http_requests_total{{framework="django"}} {request_counter[0]}
+http_requests_total{{framework="django"}} {counter}
 # HELP up Was the last scrape of Django successful
 # TYPE up gauge
 up{{job="django-backend"}} 1
@@ -19,7 +19,9 @@ up{{job="django-backend"}} 1
 
 @csrf_exempt
 def health_view(request):
-    request_counter[0] += 1
+    global counter
+    counter += 1
+    print(f"Health check called! Counter is now: {counter}")  # Debug log
     return HttpResponse('{"status": "healthy", "framework": "Django 🚀"}', content_type="application/json")
 
 urlpatterns = [
