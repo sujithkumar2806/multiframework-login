@@ -113,7 +113,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SERVER_ROOT_URL=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com/grafana/
+      - GF_SERVER_ROOT_URL=http://d3qn5h5of4mccd.cloudfront.net/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_INSTALL_PLUGINS=grafana-piechart-panel
     volumes:
