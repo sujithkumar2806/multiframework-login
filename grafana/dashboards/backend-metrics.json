@@ -1,49 +1,354 @@
 {
   "dashboard": {
-    "title": "Backend Metrics",
-    "uid": "backend-metrics",
-    "description": "API request metrics for all frameworks",
-    "tags": ["api", "performance"],
+    "id": null,
+    "uid": "comprehensive-monitoring",
+    "title": "Comprehensive Service Monitoring",
+    "tags": ["prometheus", "microservices"],
     "timezone": "browser",
-    "schemaVersion": 27,
-    "refresh": "30s",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
     "panels": [
       {
         "id": 1,
-        "title": "Request Rate - All Frameworks",
-        "type": "timeseries",
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "title": "Services Health Status",
+        "type": "stat",
+        "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
         "targets": [
           {
-            "expr": "sum(rate(http_requests_total[5m])) by (framework)",
-            "legendFormat": "{{framework}}",
+            "expr": "probe_success{framework=\"fastapi\"}",
+            "legendFormat": "FastAPI",
             "refId": "A"
+          },
+          {
+            "expr": "probe_success{framework=\"django\"}",
+            "legendFormat": "Django",
+            "refId": "B"
+          },
+          {
+            "expr": "probe_success{framework=\"node\"}",
+            "legendFormat": "Node",
+            "refId": "C"
+          },
+          {
+            "expr": "probe_success{framework=\"dotnet\"}",
+            "legendFormat": "Dotnet",
+            "refId": "D"
           }
         ],
         "fieldConfig": {
           "defaults": {
-            "unit": "reqps"
+            "mappings": [
+              {"type": "value", "value": "1", "text": "UP", "color": "green"},
+              {"type": "value", "value": "0", "text": "DOWN", "color": "red"}
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "color": {"mode": "thresholds"}
           }
+        },
+        "options": {
+          "reduceOptions": {"values": false, "calcs": ["lastNotNull"]},
+          "orientation": "horizontal",
+          "textMode": "auto"
         }
       },
       {
         "id": 2,
-        "title": "Total Requests by Framework",
-        "type": "bargauge",
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "title": "EC2 CPU Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 3},
         "targets": [
           {
-            "expr": "sum(http_requests_total) by (framework)",
-            "legendFormat": "{{framework}}",
+            "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "EC2",
             "refId": "A"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "EC2 Memory Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 3},
+        "targets": [
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "EC2",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Container CPU Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
+        "targets": [
+          {
+            "expr": "irate(container_cpu_usage_seconds_total{name=\"ubuntu-fastapi-1\",cpu=\"total\"}[5m]) * 100",
+            "legendFormat": "FastAPI",
+            "refId": "A"
+          },
+          {
+            "expr": "irate(container_cpu_usage_seconds_total{name=\"ubuntu-django-1\",cpu=\"total\"}[5m]) * 100",
+            "legendFormat": "Django",
+            "refId": "B"
+          },
+          {
+            "expr": "irate(container_cpu_usage_seconds_total{name=\"ubuntu-node-1\",cpu=\"total\"}[5m]) * 100",
+            "legendFormat": "Node",
+            "refId": "C"
+          },
+          {
+            "expr": "irate(container_cpu_usage_seconds_total{name=\"ubuntu-dotnet-1\",cpu=\"total\"}[5m]) * 100",
+            "legendFormat": "Dotnet",
+            "refId": "D"
+          },
+          {
+            "expr": "irate(container_cpu_usage_seconds_total{name=\"ubuntu-nginx-1\",cpu=\"total\"}[5m]) * 100",
+            "legendFormat": "Nginx",
+            "refId": "E"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "decimals": 2}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Container Memory Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{name=\"ubuntu-fastapi-1\"}",
+            "legendFormat": "FastAPI",
+            "refId": "A"
+          },
+          {
+            "expr": "container_memory_usage_bytes{name=\"ubuntu-django-1\"}",
+            "legendFormat": "Django",
+            "refId": "B"
+          },
+          {
+            "expr": "container_memory_usage_bytes{name=\"ubuntu-node-1\"}",
+            "legendFormat": "Node",
+            "refId": "C"
+          },
+          {
+            "expr": "container_memory_usage_bytes{name=\"ubuntu-dotnet-1\"}",
+            "legendFormat": "Dotnet",
+            "refId": "D"
+          },
+          {
+            "expr": "container_memory_usage_bytes{name=\"ubuntu-nginx-1\"}",
+            "legendFormat": "Nginx",
+            "refId": "E"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "decbytes", "decimals": 1}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "API Request Rate (NGINX Total)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 19},
+        "targets": [
+          {
+            "expr": "rate(nginx_http_requests_total[5m])",
+            "legendFormat": "Total",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "reqps", "decimals": 2}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "NGINX Connections",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 19},
+        "targets": [
+          {
+            "expr": "nginx_connections_active",
+            "legendFormat": "Active",
+            "refId": "A"
+          },
+          {
+            "expr": "nginx_connections_writing",
+            "legendFormat": "Writing",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "short", "decimals": 0}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "API Latency - All Frameworks",
+        "type": "timeseries",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 27},
+        "targets": [
+          {
+            "expr": "probe_duration_seconds{framework=\"fastapi\"}",
+            "legendFormat": "FastAPI",
+            "refId": "A"
+          },
+          {
+            "expr": "probe_duration_seconds{framework=\"django\"}",
+            "legendFormat": "Django",
+            "refId": "B"
+          },
+          {
+            "expr": "probe_duration_seconds{framework=\"node\"}",
+            "legendFormat": "Node",
+            "refId": "C"
+          },
+          {
+            "expr": "probe_duration_seconds{framework=\"dotnet\"}",
+            "legendFormat": "Dotnet",
+            "refId": "D"
           }
         ],
         "fieldConfig": {
           "defaults": {
-            "unit": "short"
+            "unit": "s",
+            "decimals": 4
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "min", "max", "mean"]
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Error Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 37},
+        "targets": [
+          {
+            "expr": "(1 - probe_success{framework=\"fastapi\"}) * 100",
+            "legendFormat": "FastAPI",
+            "refId": "A"
+          },
+          {
+            "expr": "(1 - probe_success{framework=\"django\"}) * 100",
+            "legendFormat": "Django",
+            "refId": "B"
+          },
+          {
+            "expr": "(1 - probe_success{framework=\"node\"}) * 100",
+            "legendFormat": "Node",
+            "refId": "C"
+          },
+          {
+            "expr": "(1 - probe_success{framework=\"dotnet\"}) * 100",
+            "legendFormat": "Dotnet",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "decimals": 2}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "max"]
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Disk Usage",
+        "type": "gauge",
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 37},
+        "targets": [
+          {
+            "expr": "100 - ((min(node_filesystem_avail_bytes{fstype=\"ext4\"}) * 100) / min(node_filesystem_size_bytes{fstype=\"ext4\"}))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}}
+      },
+      {
+        "id": 12,
+        "title": "Network Traffic",
+        "type": "timeseries",
+        "gridPos": {"h": 6, "w": 18, "x": 0, "y": 43},
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])",
+            "legendFormat": "Inbound",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m])",
+            "legendFormat": "Outbound",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "Bps", "decimals": 1}},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["last", "mean", "max"]
           }
         }
       }
-    ]
-  }
+    ],
+    "time": {"from": "now-1h", "to": "now"}
+  },
+  "overwrite": true
 }
+ 
+ 
