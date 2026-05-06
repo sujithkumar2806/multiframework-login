@@ -1,6 +1,6 @@
 {
   "dashboard": {
-    "title": "Node Exporter - EC2 Metrics",
+    "title": "Node Exporter - EC2 Infrastructure",
     "uid": "node-exporter-dashboard",
     "tags": ["node-exporter", "ec2", "infrastructure"],
     "timezone": "browser",
@@ -54,7 +54,7 @@
         "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
         "targets": [
           {
-            "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/etc/hostname\"} / node_filesystem_size_bytes{mountpoint=\"/etc/hostname\"})) * 100",
+            "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
             "legendFormat": "Disk Usage %",
             "refId": "A"
           }
@@ -87,49 +87,6 @@
         "fieldConfig": {
           "defaults": {
             "unit": "bps"
-          }
-        }
-      },
-      {
-        "id": 5,
-        "title": "System Load Average",
-        "type": "timeseries",
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
-        "targets": [
-          {
-            "expr": "node_load1",
-            "legendFormat": "Load 1m",
-            "refId": "A"
-          },
-          {
-            "expr": "node_load5",
-            "legendFormat": "Load 5m",
-            "refId": "B"
-          },
-          {
-            "expr": "node_load15",
-            "legendFormat": "Load 15m",
-            "refId": "C"
-          }
-        ]
-      },
-      {
-        "id": 6,
-        "title": "System Uptime",
-        "type": "stat",
-        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 16},
-        "targets": [
-          {
-            "expr": "node_boot_time_seconds",
-            "legendFormat": "Uptime",
-            "format": "table",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "s",
-            "decimals": 0
           }
         }
       }
