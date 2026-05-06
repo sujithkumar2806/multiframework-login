@@ -169,6 +169,15 @@ pipeline {
                 """
             }
         }
+        stage('Load Secrets') {
+            steps   {
+                sh """
+                ssh -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} '
+                bash ${DEPLOY_PATH}/fetch-secrets.sh
+            '
+        """
+            }
+        }
 
         // ── STAGE 5: deploy only changed services ────────────────────────────
         stage('Deploy') {

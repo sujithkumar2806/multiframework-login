@@ -1,0 +1,45 @@
+global:
+  resolve_timeout: 5m
+  # SMTP for email alerts — fill in your email details
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'your-email@gmail.com'
+  smtp_auth_username: 'your-email@gmail.com'
+  smtp_auth_password: 'your-gmail-app-password'  # Gmail App Password, not your real password
+  smtp_require_tls: true
+
+route:
+  group_by: ['alertname', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'email-alerts'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'email-alerts'
+      repeat_interval: 1h
+    - match:
+        severity: warning
+      receiver: 'email-alerts'
+      repeat_interval: 4h
+
+receivers:
+  - name: 'email-alerts'
+    email_configs:
+      - to: 'your-email@gmail.com'
+        subject: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Service: {{ .Labels.service }}
+          Severity: {{ .Labels.severity }}
+          {{ end }}
+        send_resolved: true
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']

@@ -1,0 +1,67 @@
+groups:
+  - name: backend-services
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is DOWN"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: HighAPILatency
+        expr: http_request_duration_seconds_p99 > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency on {{ $labels.job }}"
+          description: "P99 latency is {{ $value }}s on {{ $labels.job }}"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on EC2"
+          description: "CPU usage is {{ $value }}% for more than 5 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage on EC2"
+          description: "Memory usage is {{ $value }}%"
+
+      - alert: ContainerHighCPU
+        expr: sum(rate(container_cpu_usage_seconds_total{name!=""}[5m])) by (name) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high CPU"
+          description: "Container {{ $labels.name }} CPU is {{ $value }}%"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on EC2"
+          description: "Only {{ $value }}% disk space remaining"
+
+  - name: database
+    rules:
+      - alert: DatabaseConnectionFailed
+        expr: up{job=~".*backend.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend {{ $labels.job }} is down (possible DB issue)"
+          description: "{{ $labels.job }} has been unreachable for 2 minutes"

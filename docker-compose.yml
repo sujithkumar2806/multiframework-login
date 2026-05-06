@@ -96,9 +96,10 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - "--web.external-url=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com/prometheus/"
-      - "--web.route-prefix=/prometheus/"
+      # - "--web.route-prefix=/prometheus/"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alertmanager/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
       - prometheus_data:/prometheus
     networks:
       - app-network
@@ -142,6 +143,20 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     privileged: true
+    networks:
+      - app-network
+    restart: unless-stopped
+
+
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
     networks:
       - app-network
     restart: unless-stopped
