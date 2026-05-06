@@ -102,6 +102,22 @@ services:
       - app-network
     restart: unless-stopped
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SERVER_ROOT_URL=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
       - prometheus
 
   node-exporter:
@@ -157,23 +173,3 @@ networks:
 volumes:
   grafana_data:
   prometheus_data:
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SERVER_ROOT_URL=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com
-      - GF_SERVER_SERVE_FROM_SUB_PATH=false
-      - GF_SERVER_ENFORCE_DOMAIN=false
-      - GF_SERVER_ROUTER_LOGGING=true
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-    networks:
-      - app-network
-    restart: unless-stopped
-    depends_on:
-      - prometheus
