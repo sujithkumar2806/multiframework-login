@@ -12,7 +12,7 @@
         "id": 1,
         "title": "Request Rate - All Frameworks",
         "type": "timeseries",
-        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
         "targets": [
           {
             "expr": "sum(rate(http_requests_total[5m])) by (framework)",
@@ -22,16 +22,18 @@
         ],
         "fieldConfig": {
           "defaults": {
-            "unit": "reqps"
+            "unit": "reqps",
+            "custom": {
+              "lineInterpolation": "smooth"
+            }
           }
-        },
-        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
+        }
       },
       {
         "id": 2,
         "title": "Total Requests by Framework",
         "type": "bargauge",
-        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
         "targets": [
           {
             "expr": "sum(http_requests_total) by (framework)",
@@ -41,10 +43,12 @@
         ],
         "fieldConfig": {
           "defaults": {
-            "unit": "short"
+            "unit": "short",
+            "custom": {
+              "displayMode": "gradient"
+            }
           }
-        },
-        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+        }
       }
     ]
   }
