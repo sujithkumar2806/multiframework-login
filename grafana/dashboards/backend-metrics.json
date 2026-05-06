@@ -2,37 +2,47 @@
   "dashboard": {
     "title": "Backend Metrics",
     "uid": "backend-metrics",
-    "tags": ["performance", "api"],
+    "description": "API request metrics for all frameworks",
+    "tags": ["api", "performance"],
     "timezone": "browser",
     "schemaVersion": 27,
-    "version": 1,
     "refresh": "30s",
     "panels": [
       {
         "id": 1,
         "title": "Request Rate - All Frameworks",
         "type": "timeseries",
-        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
         "targets": [
           {
             "expr": "sum(rate(http_requests_total[5m])) by (framework)",
             "legendFormat": "{{framework}}",
             "refId": "A"
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
       },
       {
         "id": 2,
         "title": "Total Requests by Framework",
         "type": "bargauge",
-        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
         "targets": [
           {
             "expr": "sum(http_requests_total) by (framework)",
             "legendFormat": "{{framework}}",
             "refId": "A"
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
       }
     ]
   }
