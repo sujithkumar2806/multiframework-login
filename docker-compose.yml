@@ -161,6 +161,20 @@ services:
       - app-network
     restart: unless-stopped
 
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+
+
+
 networks:
   app-network:
     driver: bridge

@@ -83,3 +83,4 @@ temp/
 *.pem
 *.crt
 secret.key
+node_modules/
