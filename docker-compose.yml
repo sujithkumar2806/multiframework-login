@@ -95,7 +95,7 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - "--web.external-url=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com/prometheus/"
+      # - "--web.external-url=http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com/prometheus/"
       # - "--web.route-prefix=/prometheus/"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
