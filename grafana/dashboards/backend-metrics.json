@@ -19,15 +19,7 @@
             "legendFormat": "{{framework}}",
             "refId": "A"
           }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "reqps",
-            "custom": {
-              "lineInterpolation": "smooth"
-            }
-          }
-        }
+        ]
       },
       {
         "id": 2,
@@ -40,15 +32,7 @@
             "legendFormat": "{{framework}}",
             "refId": "A"
           }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "short",
-            "custom": {
-              "displayMode": "gradient"
-            }
-          }
-        }
+        ]
       }
     ]
   }
