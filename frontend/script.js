@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://multiframework-alb-1441586806.us-east-1.elb.amazonaws.com';
+const API_BASE_URL = 'http://d3qn5h5of4mccd.cloudfront.net';
 let currentBackend = localStorage.getItem('selectedBackend') || 'fastapi';
 
 function setBackend(backend) {
