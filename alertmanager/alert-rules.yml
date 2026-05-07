@@ -3,12 +3,12 @@ groups:
     rules:
       - alert: ServiceDown
         expr: up == 0
-        for: 1m
+        for: 0m
         labels:
           severity: critical
         annotations:
           summary: "Service {{ $labels.job }} is DOWN"
-          description: "{{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been down for more than 0 minute."
 
       - alert: HighAPILatency
         expr: http_request_duration_seconds_p99 > 2

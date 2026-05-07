@@ -6,7 +6,7 @@ const url = require('url');
 const client = require('prom-client');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT   || 3000;
 
 // Initialize Prometheus metrics
 const httpRequestDurationMicroseconds = new client.Histogram({
