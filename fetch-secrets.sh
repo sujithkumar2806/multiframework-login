@@ -26,4 +26,4 @@ DOTNET_DATABASE_URL=Host=${DB_HOST};Database=${DB_NAME};Username=${DB_USER};Pass
 EOF
 
 chmod 600 /home/ubuntu/multiframework-login/.env
-echo "Done. Secrets written to .env"
+echo "Done. Secrets written to .env Successfully"
