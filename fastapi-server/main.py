@@ -117,7 +117,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     
-    return {"message": "User created successfully", "username": user.username}
+    return {"message": "User created successfully .", "username": user.username}
 
 @app.post("/api/login")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
