@@ -25,24 +25,24 @@ pipeline {
             }
         }
 
-        stage('Detect changes') {
-            steps {
-                script {
-                    def changed = sh(
-                        script: "git diff --name-only HEAD~1 HEAD 2>/dev/null || echo 'all'",
-                        returnStdout: true
-                    ).trim()
+        // stage('Detect changes') {
+        //     steps {
+        //         script {
+        //             def changed = sh(
+        //                 script: "git diff --name-only HEAD~1 HEAD 2>/dev/null || echo 'all'",
+        //                 returnStdout: true
+        //             ).trim()
 
-                    echo "Changed files:\n${changed}"
+        //             echo "Changed files:\n${changed}"
                     
 
-                    env.BUILD_FASTAPI  = (changed.contains('fastapi-server/')  || changed == 'all') ? 'true' : 'false'
-                    env.BUILD_DJANGO   = (changed.contains('django-server/')   || changed == 'all') ? 'true' : 'false'
-                    env.BUILD_NODE     = (changed.contains('node-server/')     || changed == 'all') ? 'true' : 'false'
-                    env.BUILD_DOTNET   = (changed.contains('dotnet-server/')   || changed == 'all') ? 'true' : 'false'
-                }
-            }
-        }
+        //             env.BUILD_FASTAPI  = (changed.contains('fastapi-server/')  || changed == 'all') ? 'true' : 'false'
+        //             env.BUILD_DJANGO   = (changed.contains('django-server/')   || changed == 'all') ? 'true' : 'false'
+        //             env.BUILD_NODE     = (changed.contains('node-server/')     || changed == 'all') ? 'true' : 'false'
+        //             env.BUILD_DOTNET   = (changed.contains('dotnet-server/')   || changed == 'all') ? 'true' : 'false'
+        //         }
+        //     }
+        // }
 
         stage('Set Build Version') {
             steps {
