@@ -103,20 +103,6 @@ pipeline {
             }
         }
 
-        stage('DB Migration') {
-            steps {
-                sh """
-                    ssh ubuntu@${EC2_HOST} '
-                        cd ${DEPLOY_PATH}
-                        docker run --rm \
-                          --network multiframework-login_app-network \
-                          --env-file .env \
-                          ${ECR_REPO}:fastapi-${BUILD_VERSION} \
-                          python /app/migrate.py
-                    '
-                """
-            }
-        }
 
         stage('Deploy') {
             steps {
@@ -150,6 +136,22 @@ pipeline {
                         echo "Django  : \$(curl -sf http://localhost:8002/api/health || echo FAILED)"
                         echo "Node    : \$(curl -sf http://localhost:8003/api/health || echo FAILED)"
                         echo ".NET    : \$(curl -sf http://localhost:8004/health || echo FAILED)"
+                    '
+                """
+            }
+        }
+
+
+        stage('DB Migration') {
+            steps {
+                sh """
+                    ssh ubuntu@${EC2_HOST} '
+                        cd ${DEPLOY_PATH}
+                        docker run --rm \
+                          --network multiframework-login_app-network \
+                          --env-file .env \
+                          ${ECR_REPO}:fastapi-${BUILD_VERSION} \
+                          python /app/migrate.py
                     '
                 """
             }
