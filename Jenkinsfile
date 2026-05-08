@@ -124,6 +124,17 @@ pipeline {
             }
         }
 
+        stage('DB Migration') {
+            steps {
+                sh """
+                    ssh ubuntu@${EC2_HOST} '
+                        docker exec multiframework-login-fastapi-backend-1 \
+                        python /app/migrate.py
+                    '
+                """
+            }
+        }
+
         stage('Verify') {
             steps {
                 sh """
@@ -142,20 +153,20 @@ pipeline {
         }
 
 
-        stage('DB Migration') {
-            steps {
-                sh """
-                    ssh ubuntu@${EC2_HOST} '
-                        cd ${DEPLOY_PATH}
-                        docker run --rm \
-                          --network multiframework-login_app-network \
-                          --env-file .env \
-                          ${ECR_REPO}:fastapi-${BUILD_VERSION} \
-                          python /app/migrate.py
-                    '
-                """
-            }
-        }
+        // stage('DB Migration') {
+        //     steps {
+        //         sh """
+        //             ssh ubuntu@${EC2_HOST} '
+        //                 cd ${DEPLOY_PATH}
+        //                 docker run --rm \
+        //                   --network multiframework-login_app-network \
+        //                   --env-file .env \
+        //                   ${ECR_REPO}:fastapi-${BUILD_VERSION} \
+        //                   python /app/migrate.py
+        //             '
+        //         """
+        //     }
+        // }
     }
 
     post {
