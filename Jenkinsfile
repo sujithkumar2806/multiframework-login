@@ -81,6 +81,27 @@ pipeline {
             }
         }
 
+        // stage('Build Images') {
+        //     steps {
+        //         script {
+
+        //             def buildService = { dir, name ->
+        //                 sh """
+        //                     ssh ubuntu@${EC2_HOST} '
+        //                         cd ${DEPLOY_PATH}/${dir}
+        //                         docker build -t ${ECR_REPO}:${name}-${BUILD_VERSION} .
+        //                         docker push ${ECR_REPO}:${name}-${BUILD_VERSION}
+        //                     '
+        //                 """
+        //             }
+
+        //             if (env.BUILD_FASTAPI == 'true') buildService('fastapi-server', 'fastapi')
+        //             if (env.BUILD_DJANGO == 'true')  buildService('django-server', 'django')
+        //             if (env.BUILD_NODE == 'true')    buildService('node-server', 'node')
+        //             if (env.BUILD_DOTNET == 'true')  buildService('dotnet-server', 'dotnet')
+        //         }
+        //     }
+        // }
         stage('Build Images') {
             steps {
                 script {
@@ -95,10 +116,10 @@ pipeline {
                         """
                     }
 
-                    if (env.BUILD_FASTAPI == 'true') buildService('fastapi-server', 'fastapi')
-                    if (env.BUILD_DJANGO == 'true')  buildService('django-server', 'django')
-                    if (env.BUILD_NODE == 'true')    buildService('node-server', 'node')
-                    if (env.BUILD_DOTNET == 'true')  buildService('dotnet-server', 'dotnet')
+                    buildService('fastapi-server', 'fastapi')
+                    buildService('django-server', 'django')
+                    buildService('node-server', 'node')
+                    buildService('dotnet-server', 'dotnet')
                 }
             }
         }
