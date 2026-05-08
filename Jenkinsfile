@@ -34,15 +34,12 @@ pipeline {
                     ).trim()
 
                     echo "Changed files:\n${changed}"
-                    env.BUILD_FASTAPI  = 'true'
-                    env.BUILD_DJANGO   = 'true'
-                    env.BUILD_NODE     = 'true'
-                    env.BUILD_DOTNET   = 'true'
+                    
 
-                    // env.BUILD_FASTAPI  = (changed.contains('fastapi-server/')  || changed == 'all') ? 'true' : 'false'
-                    // env.BUILD_DJANGO   = (changed.contains('django-server/')   || changed == 'all') ? 'true' : 'false'
-                    // env.BUILD_NODE     = (changed.contains('node-server/')     || changed == 'all') ? 'true' : 'false'
-                    // env.BUILD_DOTNET   = (changed.contains('dotnet-server/')   || changed == 'all') ? 'true' : 'false'
+                    env.BUILD_FASTAPI  = (changed.contains('fastapi-server/')  || changed == 'all') ? 'true' : 'false'
+                    env.BUILD_DJANGO   = (changed.contains('django-server/')   || changed == 'all') ? 'true' : 'false'
+                    env.BUILD_NODE     = (changed.contains('node-server/')     || changed == 'all') ? 'true' : 'false'
+                    env.BUILD_DOTNET   = (changed.contains('dotnet-server/')   || changed == 'all') ? 'true' : 'false'
                 }
             }
         }
@@ -97,9 +94,6 @@ pipeline {
                             '
                         """
                     }
-
-
-                    
 
                     if (env.BUILD_FASTAPI == 'true') buildService('fastapi-server', 'fastapi')
                     if (env.BUILD_DJANGO == 'true')  buildService('django-server', 'django')
