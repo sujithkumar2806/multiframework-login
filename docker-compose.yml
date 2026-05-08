@@ -1,7 +1,8 @@
 services:
   fastapi-backend:
     build: ./fastapi-server
-    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:fastapi-latest
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:fastapi-${BUILD_VERSION}
+    # image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:fastapi-latest
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
     ports:
@@ -18,7 +19,8 @@ services:
 
   django-backend:
     build: ./django-server
-    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:django-latest
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:django-${BUILD_VERSION}
+    # image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:django-latest
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
     ports:
@@ -35,7 +37,8 @@ services:
 
   node-backend:
     build: ./node-server
-    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:node-latest
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:node-${BUILD_VERSION}
+    # image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:node-latest
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
@@ -56,7 +59,8 @@ services:
 
   dotnet-backend:
     build: ./dotnet-server
-    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:dotnet-latest
+    image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:dotnet-${BUILD_VERSION}
+    # image: 608380991635.dkr.ecr.us-east-1.amazonaws.com/multiframework:dotnet-latest
     environment:
       DATABASE_URL: Host=${DB_HOST};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
     ports:
