@@ -1,6 +1,4 @@
 #!/bin/bash
-# Backup SOURCE RDS to dump.sql and restore to TARGET RDS
-
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_DIR="/home/ubuntu/backups"
 BACKUP_FILE="$BACKUP_DIR/rds_backup_$TIMESTAMP.sql"
@@ -13,30 +11,27 @@ DB_NAME="postgres"
 
 mkdir -p $BACKUP_DIR
 
-echo "[$(date)] Step 1: Dumping SOURCE RDS to $BACKUP_FILE..."
-PGPASSWORD=$DB_PASS pg_dump \
-    -h $SOURCE_HOST \
-    -U $DB_USER \
-    -d $DB_NAME \
-    --no-owner \
-    --no-acl \
-    --clean \
-    --if-exists \
-    > $BACKUP_FILE
+echo "[$(date)] Step 1: Dumping SOURCE RDS using postgres:15 Docker image..."
+docker run --rm \
+  -e PGPASSWORD=$DB_PASS \
+  postgres:15 \
+  pg_dump -h $SOURCE_HOST -U $DB_USER -d $DB_NAME \
+  --no-owner --no-acl --clean --if-exists \
+  > $BACKUP_FILE
 
-if [ $? -eq 0 ]; then
-    echo "[$(date)] Dump successful! File size: $(du -sh $BACKUP_FILE | cut -f1)"
+if [ $? -eq 0 ] && [ -s $BACKUP_FILE ]; then
+    echo "[$(date)] Dump successful! Size: $(du -sh $BACKUP_FILE | cut -f1)"
 else
     echo "[$(date)] ERROR: Dump failed!"
     exit 1
 fi
 
-echo "[$(date)] Step 2: Restoring dump to TARGET RDS..."
-PGPASSWORD=$DB_PASS psql \
-    -h $TARGET_HOST \
-    -U $DB_USER \
-    -d $DB_NAME \
-    -f $BACKUP_FILE
+echo "[$(date)] Step 2: Restoring to TARGET RDS..."
+docker run --rm \
+  -e PGPASSWORD=$DB_PASS \
+  -v $BACKUP_FILE:/backup.sql \
+  postgres:15 \
+  psql -h $TARGET_HOST -U $DB_USER -d $DB_NAME -f /backup.sql
 
 if [ $? -eq 0 ]; then
     echo "[$(date)] Restore successful!"
@@ -45,13 +40,12 @@ else
     exit 1
 fi
 
-echo "[$(date)] Step 3: Verifying data in TARGET RDS..."
-PGPASSWORD=$DB_PASS psql \
-    -h $TARGET_HOST \
-    -U $DB_USER \
-    -d $DB_NAME \
-    -c "SELECT COUNT(*) as total_users FROM users;"
+echo "[$(date)] Step 3: Verifying TARGET RDS..."
+docker run --rm \
+  -e PGPASSWORD=$DB_PASS \
+  postgres:15 \
+  psql -h $TARGET_HOST -U $DB_USER -d $DB_NAME \
+  -c "SELECT COUNT(*) as total_users FROM users;"
 
-# Keep only last 7 backups
 find $BACKUP_DIR -name "rds_backup_*.sql" -mtime +7 -delete
-echo "[$(date)] Old backups cleaned. Done!"
+echo "[$(date)] Done! Backup saved: $BACKUP_FILE"
