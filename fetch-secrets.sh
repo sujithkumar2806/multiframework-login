@@ -23,6 +23,7 @@ DB_PASSWORD=${DB_PASSWORD}
 DB_PORT=${DB_PORT}
 DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 DOTNET_DATABASE_URL=Host=${DB_HOST};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+TARGET_DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@multiframework-target-db.c4fuy0s4wc4o.us-east-1.rds.amazonaws.com:5432/${DB_NAME}
 EOF
 
 chmod 600 /home/ubuntu/multiframework-login/.env
